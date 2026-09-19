@@ -57,7 +57,8 @@ private:
     float radius_sqr;
 };
 
-template <auto PotentialFunc, auto AABBFunc>
+template <float PotentialFunc(float, float), //
+          AABB AABBFunc(const AABB&, const AABB&)>
 struct OperationBlob : Blob {
 
     OperationBlob() : left(nullptr), right(nullptr) {}
@@ -78,16 +79,14 @@ struct OperationBlob : Blob {
     Blob* right;
 };
 
-constexpr AABB aabb_union(const AABB& left, const AABB& right) {
-    return AABB(min(left.min, right.min), max(left.max, right.max));
-}
+namespace PotentialFunctions {
+    inline constexpr auto sum = [](float a, float b) { return a + b; };
+    inline constexpr auto min = [](float a, float b) { return a < b ? a : b; };
+    inline constexpr auto max = [](float a, float b) { return a > b ? a : b; };
+    inline constexpr auto difference = [](float a, float b) { return a < b ? a : 2.0f * THRESHOLD - b; };
+};
 
-constexpr AABB aabb_intersect(const AABB& left, const AABB& right) {
-    return AABB(max(left.min, right.min), min(left.max, right.max));
-}
-
-using SumBlob = OperationBlob<[](float a, float b) -> float { return a + b; }, aabb_union>;
-using UnionBlob = OperationBlob<[](float a, float b) -> float { return std::max(a, b); }, aabb_union>;
-using IntersectionBlob = OperationBlob<[](float a, float b) -> float { return std::min(a, b); }, aabb_intersect>;
-using DifferenceBlob = OperationBlob<[](float a, float b) -> float { return std::min(a, 2.0f * THRESHOLD - b); },
-                                     [](const AABB& left, const AABB&) -> AABB { return left; }>;
+using SumBlob = OperationBlob<PotentialFunctions::sum, aabb_union>;
+using UnionBlob = OperationBlob<PotentialFunctions::max, aabb_union>;
+using IntersectionBlob = OperationBlob<PotentialFunctions::min, aabb_intersect>;
+using DifferenceBlob = OperationBlob<PotentialFunctions::difference, aabb_first>;

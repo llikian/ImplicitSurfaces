@@ -80,12 +80,9 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
     std::cout << "The scene contains " << blobs_count << " blobs.\n";
 
     std::vector<vec3> vertices;
-    std::vector<vec3> normals;
-
     std::vector<int> triangles;
 
     vertices.reserve(20000);
-    normals.reserve(20000);
     triangles.reserve(20000);
 
     int nv = 0;
@@ -119,14 +116,14 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
     int* ez = new int[size];
 
     // Diagonal of a cell
-    vec3 d = (region.max - region.min) / static_cast<float>(n - 1);
+    vec3 d = (region.pmax - region.pmin) / static_cast<float>(n - 1);
 
     double za = 0.0;
 
     // Compute field inside lower Oxy plane
     for(int i = nax; i < nbx; i++) {
         for(int j = nay; j < nby; j++) {
-            u[i * ny + j] = region.min + vec3(i * d[0], j * d[1], za);
+            u[i * ny + j] = region.pmin + vec3(i * d[0], j * d[1], za);
             a[i * ny + j] = implicit(u[i * ny + j]);
         }
     }
@@ -138,7 +135,6 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
             if(!((a[i * ny + j] < 0.0) == !(a[(i + 1) * ny + j] >= 0.0))) {
                 vertices.push_back(
                     dichotomy(u[i * ny + j], u[(i + 1) * ny + j], a[i * ny + j], a[(i + 1) * ny + j], d[0], EPSILON));
-                normals.push_back(normal(vertices.back()));
                 eax[i * ny + j] = nv;
                 nv++;
             }
@@ -149,7 +145,6 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
             if(!((a[i * ny + j] < 0.0) == !(a[i * ny + (j + 1)] >= 0.0))) {
                 vertices.push_back(
                     dichotomy(u[i * ny + j], u[i * ny + (j + 1)], a[i * ny + j], a[i * ny + (j + 1)], d[1], EPSILON));
-                normals.push_back(normal(vertices.back()));
                 eay[i * ny + j] = nv;
                 nv++;
             }
@@ -164,7 +159,7 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
         double zb = za + d[2];
         for(int i = nax; i < nbx; i++) {
             for(int j = nay; j < nby; j++) {
-                v[i * ny + j] = region.min + vec3(i * d[0], j * d[1], zb);
+                v[i * ny + j] = region.pmin + vec3(i * d[0], j * d[1], zb);
                 b[i * ny + j] = implicit(v[i * ny + j]);
             }
         }
@@ -181,7 +176,6 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
                                                  b[(i + 1) * ny + j],
                                                  d[0],
                                                  EPSILON));
-                    normals.push_back(normal(vertices.back()));
                     ebx[i * ny + j] = nv;
                     nv++;
                 }
@@ -199,7 +193,6 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
                                                  b[i * ny + (j + 1)],
                                                  d[1],
                                                  EPSILON));
-                    normals.push_back(normal(vertices.back()));
                     eby[i * ny + j] = nv;
                     nv++;
                 }
@@ -213,7 +206,6 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
                 if(!((a[i * ny + j] < 0.0) == !(b[i * ny + j] >= 0.0))) {
                     vertices.push_back(
                         dichotomy(u[i * ny + j], v[i * ny + j], a[i * ny + j], b[i * ny + j], d[2], EPSILON));
-                    normals.push_back(normal(vertices.back()));
                     ez[i * ny + j] = nv;
                     nv++;
                 }
@@ -284,7 +276,8 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
     mesh.enable_attribute(ATTRIBUTE_NORMAL);
 
     mesh.reserve_vertices_and_indices(vertices.size(), triangles.size());
-    for(auto& normal : normals) { normal = vec3(0.0f); }
+    std::vector normals(vertices.size(), vec3(0.0f));
+
     for(std::size_t i = 0; i + 2 < triangles.size(); i += 3) {
         mesh.add_triangle(triangles[i], triangles[i + 2], triangles[i + 1]);
 
@@ -295,6 +288,7 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
         normals[triangles[i + 1]] += normal;
         normals[triangles[i + 2]] += normal;
     }
+
     for(std::size_t i = 0; i < vertices.size(); ++i) { mesh.add_vertex(vertices[i], normals[i]); }
 
     mesh.bind_buffers();
