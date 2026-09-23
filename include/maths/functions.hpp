@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cmath>
+#include <algorithm>
 #include "vec3.hpp"
 
 inline float pow2(float x) {
