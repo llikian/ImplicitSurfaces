@@ -43,7 +43,7 @@ Application::~Application() {
 }
 
 Blob* add_recursive_spheres(int depth) {
-    float bound_len = 7.0f;
+    float bound_len = 10.0f;
     static const vec3 min_bound(-bound_len);
     static const vec3 max_bound(bound_len);
 
@@ -59,15 +59,10 @@ Blob* add_recursive_spheres(int depth) {
 void Application::run() {
     Surface surface;
 
-    Blob* sphere = new SphereBlob(1.0f, vec3(0.0f), 5.0f);
-    Blob* capsule = new CapsuleBlob(1.0f, vec3(-2.0f, -5.0f, 0.0f), vec3(2.0f, 5.0f, 0.0f), 1.0f);
-    // Blob* capsule = new CapsuleBlob(1.0f, vec3(0.0f, -5.0f, 0.0f), vec3(0.0f, 5.0f, 0.0f), 0.5f);
-    // Blob* root = new TwistBlobY(1.0f, capsule, 0.5f);
-
     Blob* root = add_recursive_spheres(8);
 
     surface.root = root;
-    Mesh surface_mesh = surface.compute_mesh(128);
+    Mesh surface_mesh = surface.compute_mesh(1 << 7);
 
     camera.set_position(camera.get_position() - vec3(0.0f, 0.0f, root->aabb.pmin.z - 5.0f));
 

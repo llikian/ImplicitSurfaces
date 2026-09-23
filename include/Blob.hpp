@@ -58,38 +58,6 @@ private:
     float radius_sqr;
 };
 
-struct TwistBlobY : Blob {
-    TwistBlobY(float scale, Blob* child, float angle) : Blob(scale), child(child), angle(angle) {}
-
-    AABB get_aabb_and_blob_count(std::size_t& count) override {
-        ++count;
-
-        aabb = child->get_aabb_and_blob_count(count);
-        aabb.pmin *= 2.0f;
-        aabb.pmax *= 2.0f;
-
-        return aabb;
-    }
-
-    vec3 twist(const vec3& point) const {
-        float theta = angle * point.y;
-        float cosine = std::cos(theta);
-        float sine = std::sin(theta);
-
-        return vec3(point.x * cosine - point.z * sine, //
-                    point.y,
-                    point.x * sine + point.z * cosine);
-    }
-
-    [[nodiscard]] float potential(const vec3& point) const override {
-        if(!aabb.is_point_inside(point)) { return 0.0f; } // TODO : Benchmark with and without
-        return scale * child->potential(twist(point));
-    }
-
-    Blob* child;
-    float angle;
-};
-
 template <float PotentialFunc(float, float), //
           AABB AABBFunc(const AABB&, const AABB&)>
 struct OperationBlob : Blob {
