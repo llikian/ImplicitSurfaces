@@ -6,6 +6,7 @@
 #pragma once
 
 #include <iostream>
+#include <cstdint>
 
 template <typename Type>
 struct vector3; // Forward Declaration of vector3 to avoid circular inclusion.
