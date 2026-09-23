@@ -48,12 +48,12 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
     return normalize(gradient(pos));
 }
 
-[[nodiscard]] vec3 Surface::dichotomy(vec3 a, vec3 b, float va, float vb, float length, double epsilon) const {
+[[nodiscard]] vec3 Surface::dichotomy(vec3 a, vec3 b, float va, float vb, float length) const {
     int ia = va > 0.0 ? 1 : -1;
 
     vec3 c = (vb * a - va * b) / (vb - va);
 
-    while(length > epsilon) {
+    while(length > EPSILON) {
         float vc = implicit(c);
         int ic = vc > 0.0f ? 1 : -1;
         if(ia + ic == 0) {
@@ -134,7 +134,7 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
             // We need a xor b, which can be implemented a == !b
             if(!((a[i * ny + j] < 0.0) == !(a[(i + 1) * ny + j] >= 0.0))) {
                 vertices.push_back(
-                    dichotomy(u[i * ny + j], u[(i + 1) * ny + j], a[i * ny + j], a[(i + 1) * ny + j], d[0], EPSILON));
+                    dichotomy(u[i * ny + j], u[(i + 1) * ny + j], a[i * ny + j], a[(i + 1) * ny + j], d[0]));
                 eax[i * ny + j] = nv;
                 nv++;
             }
@@ -144,7 +144,7 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
         for(int j = nay; j < nby - 1; j++) {
             if(!((a[i * ny + j] < 0.0) == !(a[i * ny + (j + 1)] >= 0.0))) {
                 vertices.push_back(
-                    dichotomy(u[i * ny + j], u[i * ny + (j + 1)], a[i * ny + j], a[i * ny + (j + 1)], d[1], EPSILON));
+                    dichotomy(u[i * ny + j], u[i * ny + (j + 1)], a[i * ny + j], a[i * ny + (j + 1)], d[1]));
                 eay[i * ny + j] = nv;
                 nv++;
             }
@@ -170,12 +170,8 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
                 //   if (((b[i*ny + j] < 0.0) && (b[(i + 1)*ny + j] >= 0.0)) || ((b[i*ny + j] >= 0.0) && (b[(i + 1)*ny +
                 //   j] < 0.0)))
                 if(!((b[i * ny + j] < 0.0) == !(b[(i + 1) * ny + j] >= 0.0))) {
-                    vertices.push_back(dichotomy(v[i * ny + j],
-                                                 v[(i + 1) * ny + j],
-                                                 b[i * ny + j],
-                                                 b[(i + 1) * ny + j],
-                                                 d[0],
-                                                 EPSILON));
+                    vertices.push_back(
+                        dichotomy(v[i * ny + j], v[(i + 1) * ny + j], b[i * ny + j], b[(i + 1) * ny + j], d[0]));
                     ebx[i * ny + j] = nv;
                     nv++;
                 }
@@ -187,12 +183,8 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
                 // if (((b[i*ny + j] < 0.0) && (b[i*ny + (j + 1)] >= 0.0)) || ((b[i*ny + j] >= 0.0) && (b[i*ny + (j +
                 // 1)] < 0.0)))
                 if(!((b[i * ny + j] < 0.0) == !(b[i * ny + (j + 1)] >= 0.0))) {
-                    vertices.push_back(dichotomy(v[i * ny + j],
-                                                 v[i * ny + (j + 1)],
-                                                 b[i * ny + j],
-                                                 b[i * ny + (j + 1)],
-                                                 d[1],
-                                                 EPSILON));
+                    vertices.push_back(
+                        dichotomy(v[i * ny + j], v[i * ny + (j + 1)], b[i * ny + j], b[i * ny + (j + 1)], d[1]));
                     eby[i * ny + j] = nv;
                     nv++;
                 }
@@ -204,8 +196,7 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
             for(int j = nay; j < nby; j++) {
                 // if ((a[i*ny + j] < 0.0) && (b[i*ny + j] >= 0.0) || (a[i*ny + j] >= 0.0) && (b[i*ny + j] < 0.0))
                 if(!((a[i * ny + j] < 0.0) == !(b[i * ny + j] >= 0.0))) {
-                    vertices.push_back(
-                        dichotomy(u[i * ny + j], v[i * ny + j], a[i * ny + j], b[i * ny + j], d[2], EPSILON));
+                    vertices.push_back(dichotomy(u[i * ny + j], v[i * ny + j], a[i * ny + j], b[i * ny + j], d[2]));
                     ez[i * ny + j] = nv;
                     nv++;
                 }

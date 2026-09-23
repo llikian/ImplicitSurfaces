@@ -21,7 +21,7 @@ public:
 
     [[nodiscard]] vec3 gradient(const vec3& pos) const;
     [[nodiscard]] vec3 normal(const vec3& pos) const;
-    [[nodiscard]] vec3 dichotomy(vec3 a, vec3 b, float va, float vb, float length, double epsilon = 1.0e-4) const;
+    [[nodiscard]] vec3 dichotomy(vec3 a, vec3 b, float va, float vb, float length) const;
 
     [[nodiscard]] Mesh compute_mesh(int n);
 

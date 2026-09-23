@@ -14,6 +14,7 @@
 #include "maths/geometry.hpp"
 #include "mesh/primitives.hpp"
 #include "utility/Random.hpp"
+#include "Blob.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -45,34 +46,35 @@ Blob* add_recursive_spheres(int depth) {
     float bound_len = 7.0f;
     static const vec3 min_bound(-bound_len);
     static const vec3 max_bound(bound_len);
-    static const float min_radius = 1.0f;
-    static const float max_radius = 5.0f;
 
     if(depth == 0) {
-        return new SphereBlob(Random::get_vec3(min_bound, max_bound), Random::get_float(min_radius, max_radius));
+        return new SphereBlob(Random::get_float(-10.0f, 10.0f),
+                              Random::get_vec3(min_bound, max_bound),
+                              Random::get_float(1.0f, 5.0f));
     }
 
-    return new SumBlob(add_recursive_spheres(depth - 1), add_recursive_spheres(depth - 1));
+    return new BlendBlob(1.0f, add_recursive_spheres(depth - 1), add_recursive_spheres(depth - 1));
 }
 
 void Application::run() {
     Surface surface;
 
-    // SphereBlob A(vec3(0.0f, 0.0f, 0.0f), 3.0f);
-    // SphereBlob B(vec3(0.0f, 0.0f, 1.5f), 2.0f);
-    // CapsuleBlob C(vec3(0.0f, -2.0f, 0.0f), vec3(0.0f, 2.0f, 0.0f), 2.0f);
+    Blob* sphere = new SphereBlob(1.0f, vec3(0.0f), 5.0f);
+    Blob* capsule = new CapsuleBlob(1.0f, vec3(-2.0f, -5.0f, 0.0f), vec3(2.0f, 5.0f, 0.0f), 1.0f);
+    // Blob* capsule = new CapsuleBlob(1.0f, vec3(0.0f, -5.0f, 0.0f), vec3(0.0f, 5.0f, 0.0f), 0.5f);
+    // Blob* root = new TwistBlobY(1.0f, capsule, 0.5f);
 
-    // DifferenceBlob AdiffB(&A, &B);
-    // DifferenceBlob root(&C, &AdiffB);
+    Blob* root = add_recursive_spheres(8);
 
-    // UnionBlob AuB(&A, &B);
-
-    Blob* root = add_recursive_spheres(7);
     surface.root = root;
-    Mesh surface_mesh = surface.compute_mesh(100);
+    Mesh surface_mesh = surface.compute_mesh(128);
+
+    camera.set_position(camera.get_position() - vec3(0.0f, 0.0f, root->aabb.pmin.z - 5.0f));
 
     Shader shader({ "shaders/default.vert", "shaders/default.frag" }, "Default");
     Shader line_shader({ "shaders/line_mesh.vert", "shaders/line_mesh.frag" }, "Line Mesh");
+    Mesh wireframe_cube;
+    create_wireframe_cube_mesh(wireframe_cube);
 
     mat4 vp_matrix;
 
@@ -90,12 +92,21 @@ void Application::run() {
 
         shader.use();
         shader.set_uniform("u_mvp", vp_matrix);
-        shader.set_uniform("u_color", vec3(0.84, 0.37, 0.8));
+        shader.set_uniform_if_exists("u_color", vec3(0.84, 0.37, 0.8));
+        shader.set_uniform_if_exists("u_pmin", surface.root->aabb.pmin);
+        shader.set_uniform_if_exists("u_pmax", surface.root->aabb.pmax);
         shader.set_uniform("u_ambient", 0.3f);
         shader.set_uniform("u_alpha", 1.0f);
         shader.set_uniform("u_camera_front", camera.get_direction());
 
         surface_mesh.draw();
+
+        line_shader.use();
+        glLineWidth(3.0f);
+        line_shader.set_uniform("u_mvp", vp_matrix * surface.root->aabb.get_global_model_matrix());
+        line_shader.set_uniform("u_color", vec3(1.0f));
+        wireframe_cube.draw();
+        glLineWidth(1.0f);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
