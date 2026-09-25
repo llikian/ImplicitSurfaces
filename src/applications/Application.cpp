@@ -59,7 +59,8 @@ Blob* add_recursive_spheres(int depth) {
 void Application::run() {
     Surface surface;
 
-    Blob* root = add_recursive_spheres(8);
+    // Blob* root = add_recursive_spheres(8);
+    Blob* root = add_recursive_spheres(1);
 
     surface.root = root;
     Mesh surface_mesh = surface.compute_mesh(1 << 7);

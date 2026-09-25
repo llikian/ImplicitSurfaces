@@ -15,23 +15,6 @@
 #include "utility/LifetimeLogger.hpp"
 #include "marching_cube_tables.hpp"
 
-std::uint64_t pack_cell(std::int64_t x, std::int64_t y, std::int64_t z) {
-    constexpr unsigned int BITS_PER_AXIS = 21; // 64 = 21 * 3 + 1
-    constexpr std::int64_t AXIS_OFFSET = 1L << (BITS_PER_AXIS - 1);
-
-    constexpr auto biased = [](std::int64_t v) -> std::uint64_t {
-        return static_cast<std::uint64_t>(v + AXIS_OFFSET) & ((1ULL << BITS_PER_AXIS) - 1);
-    };
-
-    return (biased(x) << (2 * BITS_PER_AXIS)) | (biased(y) << BITS_PER_AXIS) | biased(z);
-}
-
-vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, float grid_size) {
-    return vector3<std::int64_t>(static_cast<std::int64_t>(std::floor((p.x - global_origin.x) / grid_size)),
-                                 static_cast<std::int64_t>(std::floor((p.y - global_origin.y) / grid_size)),
-                                 static_cast<std::int64_t>(std::floor((p.z - global_origin.z) / grid_size)));
-}
-
 [[nodiscard]] float Surface::implicit(const vec3& point) const {
     return THRESHOLD - root->potential(point);
 }
@@ -259,9 +242,6 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
     delete[] eby;
     delete[] ez;
 
-    std::cout << "Vertices: " << vertices.size() << '\n';
-    std::cout << "Triangles: " << triangles.size() / 3 << '\n';
-
     Mesh mesh;
     mesh.set_primitive(MeshPrimitive::TRIANGLES);
     mesh.enable_attribute(ATTRIBUTE_NORMAL);
@@ -283,6 +263,9 @@ vector3<std::int64_t> lattice_coords(const vec3& p, const vec3& global_origin, f
     for(std::size_t i = 0; i < vertices.size(); ++i) { mesh.add_vertex(vertices[i], normals[i]); }
 
     mesh.bind_buffers();
+
+    std::cout << "Vertices: " << mesh.get_vertices_amount() << '\n';
+    std::cout << "Triangles: " << mesh.get_indices_amount() / 3 << '\n';
 
     return mesh;
 }
