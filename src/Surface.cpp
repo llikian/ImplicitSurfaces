@@ -229,6 +229,7 @@
     Mesh mesh;
     mesh.set_primitive(MeshPrimitive::TRIANGLES);
     mesh.enable_attribute(ATTRIBUTE_NORMAL);
+    mesh.enable_attribute(ATTRIBUTE_COLOR);
 
     mesh.reserve_vertices_and_indices(vertices.size(), triangles.size());
     std::vector normals(vertices.size(), vec3(0.0f));
@@ -244,7 +245,9 @@
         normals[triangles[i + 2]] += normal;
     }
 
-    for(std::size_t i = 0; i < vertices.size(); ++i) { mesh.add_vertex(vertices[i], normals[i]); }
+    for(std::size_t i = 0; i < vertices.size(); ++i) {
+        mesh.add_vertex(vertices[i], normalize(normals[i]), root->get_color(vertices[i]));
+    }
 
     mesh.bind_buffers();
 

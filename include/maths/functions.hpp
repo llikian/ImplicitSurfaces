@@ -52,4 +52,8 @@ inline vec3 ceil(const vec3& vec) {
     return vec3(std::ceil(vec.x), std::ceil(vec.y), std::ceil(vec.z));
 }
 
+inline vec3 lerp(const vec3& a, const vec3& b, float t) {
+    return vec3(std::lerp(a.x, b.x, t), std::lerp(a.y, b.y, t), std::lerp(a.z, b.z, t));
+}
+
 vec3 hue_to_rgb(unsigned short hue);

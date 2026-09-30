@@ -25,6 +25,8 @@ struct Blob {
 
     [[nodiscard]] virtual float potential(const vec3& point) const = 0;
 
+    [[nodiscard]] virtual vec3 get_color(const vec3& /* point */) const = 0;
+
     float scale;
     AABB aabb;
 };
@@ -35,6 +37,10 @@ struct SphereBlob : Blob {
     AABB get_aabb_and_blob_count(std::size_t& count) override;
 
     [[nodiscard]] float potential(const vec3& point) const override;
+
+    [[nodiscard]] vec3 get_color(const vec3& /* point */) const override { return color; }
+
+    vec3 color;
 
     vec3 center;
 
@@ -49,6 +55,10 @@ struct CapsuleBlob : Blob {
     AABB get_aabb_and_blob_count(std::size_t& count) override;
 
     [[nodiscard]] float potential(const vec3& point) const override;
+
+    [[nodiscard]] vec3 get_color(const vec3& /* point */) const override { return color; }
+
+    vec3 color;
 
     vec3 A;
     vec3 B;
@@ -65,6 +75,10 @@ struct BoxBlob : Blob {
 
     [[nodiscard]] float potential(const vec3& point) const override;
 
+    [[nodiscard]] vec3 get_color(const vec3& /* point */) const override { return color; }
+
+    vec3 color;
+
     vec3 center;
     vec3 front;
     vec3 right;
@@ -77,8 +91,9 @@ private:
     vec3 axis_z;
 };
 
-template <float PotentialFunc(float, float), //
-          AABB AABBFunc(const AABB&, const AABB&)>
+template <float PotentialFunc(float, float),       //
+          AABB AABBFunc(const AABB&, const AABB&), //
+          vec3 ColorFunc(const vec3&, float, const vec3&, float)>
 struct OperationBlob : Blob {
 
     explicit OperationBlob(float scale) : Blob(scale), left(nullptr), right(nullptr) {}
@@ -89,13 +104,19 @@ struct OperationBlob : Blob {
         ++count;
 
         aabb = AABBFunc(left->get_aabb_and_blob_count(count), right->get_aabb_and_blob_count(count));
+
         return aabb;
     }
 
     [[nodiscard]] float potential(const vec3& point) const override {
-        if(!aabb.is_point_inside(point)) { return 0.0f; } // TODO : Benchmark with and without
-
         return scale * PotentialFunc(left->potential(point), right->potential(point));
+    }
+
+    [[nodiscard]] vec3 get_color(const vec3& point) const override {
+        return ColorFunc(left->get_color(point),
+                         left->potential(point),
+                         right->get_color(point),
+                         right->potential(point));
     }
 
     Blob* left;
@@ -103,13 +124,30 @@ struct OperationBlob : Blob {
 };
 
 namespace PotentialFunctions {
-    inline constexpr auto sum = [](float a, float b) { return a + b; };
-    inline constexpr auto min = [](float a, float b) { return std::min(a, b); };
-    inline constexpr auto max = [](float a, float b) { return std::max(a, b); };
-    inline constexpr auto difference = [](float a, float b) { return std::min(a, 2.0f * THRESHOLD - b); };
+    inline constexpr auto SUM = [](float a, float b) { return a + b; };
+    inline constexpr auto MIN = [](float a, float b) { return std::min(a, b); };
+    inline constexpr auto MAX = [](float a, float b) { return std::max(a, b); };
+    inline constexpr auto DIFFERENCE = [](float a, float b) { return std::min(a, 2.0f * THRESHOLD - b); };
 };
 
-using BlendBlob = OperationBlob<PotentialFunctions::sum, aabb_union>;
-using UnionBlob = OperationBlob<PotentialFunctions::max, aabb_union>;
-using IntersectionBlob = OperationBlob<PotentialFunctions::min, aabb_intersect>;
-using DifferenceBlob = OperationBlob<PotentialFunctions::difference, aabb_first>;
+namespace ColorFunctions {
+    inline constexpr auto BLEND = [](const vec3& a, float dist_a, const vec3& b, float dist_b) {
+        float sum = dist_a + dist_b;
+        if(sum < 0.0f) { return a; }
+        return lerp(a, b, dist_b / sum);
+    };
+    inline constexpr auto UNION = [](const vec3& a, float dist_a, const vec3& b, float dist_b) {
+        return dist_a < dist_b ? a : b;
+    };
+    inline constexpr auto INTERSECTION = [](const vec3& a, float dist_a, const vec3& b, float dist_b) {
+        return dist_a > dist_b ? a : b;
+    };
+    inline constexpr auto DIFFERENCE = [](const vec3& a, float dist_a, const vec3& b, float dist_b) {
+        return dist_a < (2.0f * THRESHOLD - dist_b) ? a : b;
+    };
+}
+
+using BlendBlob = OperationBlob<PotentialFunctions::SUM, aabb_union, ColorFunctions::BLEND>;
+using UnionBlob = OperationBlob<PotentialFunctions::MAX, aabb_union, ColorFunctions::UNION>;
+using IntersectionBlob = OperationBlob<PotentialFunctions::MIN, aabb_intersect, ColorFunctions::INTERSECTION>;
+using DifferenceBlob = OperationBlob<PotentialFunctions::DIFFERENCE, aabb_first, ColorFunctions::DIFFERENCE>;

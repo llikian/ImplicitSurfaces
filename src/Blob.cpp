@@ -7,6 +7,7 @@
 
 #include "maths/functions.hpp"
 #include "maths/geometry.hpp"
+#include "utility/Random.hpp"
 
 float attenuation_wyvill(float distance_sqr, int n) {
     float base = 1.0f - distance_sqr;
@@ -26,6 +27,7 @@ Blob::Blob(float scale) : scale(scale) {}
 
 SphereBlob::SphereBlob(float scale, const vec3& center, float radius)
     : Blob(scale),
+      color(Random::get_vec3(0.0f, 1.0f)),
       center(center),
       radius(radius),
       radius_sqr(radius * radius) {}
@@ -48,6 +50,7 @@ AABB SphereBlob::get_aabb_and_blob_count(std::size_t& count) {
 
 CapsuleBlob::CapsuleBlob(float scale, const vec3& A, const vec3& B, float radius)
     : Blob(scale),
+      color(Random::get_vec3(0.0f, 1.0f)),
       A(A),
       B(B),
       radius(radius),
@@ -77,6 +80,7 @@ AABB CapsuleBlob::get_aabb_and_blob_count(std::size_t& count) {
 
 BoxBlob::BoxBlob(float scale, const vec3& center, const vec3& front, const vec3& right, float height)
     : Blob(scale),
+      color(Random::get_vec3(0.0f, 1.0f)),
       center(center),
       front(front),
       right(right),

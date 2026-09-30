@@ -48,9 +48,10 @@ Blob* add_recursive_spheres(int depth) {
     static const vec3 max_bound(bound_len);
 
     if(depth == 0) {
-        return new SphereBlob(Random::get_float(-10.0f, 10.0f),
-                              Random::get_vec3(min_bound, max_bound),
-                              Random::get_float(1.0f, 5.0f));
+        SphereBlob* sphere = new SphereBlob(Random::get_float(-10.0f, 10.0f),
+                                            Random::get_vec3(min_bound, max_bound),
+                                            Random::get_float(1.0f, 5.0f));
+        return sphere;
     }
 
     return new BlendBlob(1.0f, add_recursive_spheres(depth - 1), add_recursive_spheres(depth - 1));
@@ -59,14 +60,21 @@ Blob* add_recursive_spheres(int depth) {
 void Application::run() {
     Surface surface;
 
-    // Blob* root = add_recursive_spheres(8);
-    // Blob* root = add_recursive_spheres(1);
+    Blob* root = add_recursive_spheres(7);
 
-    BoxBlob box(1.0f, vec3(0.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0, 0.0f, 1.0f), 5.0f);
-    SphereBlob sphere(1.0f, vec3(0.0f, 0.0f, 0.0f), 1.5f);
-    DifferenceBlob diff(1.0f, &box, &sphere);
+    // BoxBlob box(1.0f, vec3(0.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0, 0.0f, 1.0f), 5.0f);
+    // box.color = vec3(1.0f, 0.0f, 0.0f);
+    // SphereBlob sphere(1.0f, vec3(0.0f, 0.0f, 0.0f), 1.5f);
+    // sphere.color = vec3(0.0f, 1.0f, 0.0f);
+    // IntersectionBlob diff(1.0f, &box, &sphere);
+    // Blob* root = &diff;
 
-    Blob* root = &diff;
+    // SphereBlob sphere1(1.0f, vec3(-1.0f, 0.0f, 0.0f), 1.5f);
+    // SphereBlob sphere2(1.0f, vec3(1.0f, 0.0f, 0.0f), 1.5f);
+    // sphere1.color = vec3(1.0f, 0.0f, 0.0f);
+    // sphere2.color = vec3(0.0f, 0.0f, 1.0f);
+    // BlendBlob blend(1.0f, &sphere1, &sphere2);
+    // Blob* root = &blend;
 
     surface.root = root;
     Mesh surface_mesh = surface.compute_mesh(1 << 7);
@@ -94,9 +102,6 @@ void Application::run() {
 
         shader.use();
         shader.set_uniform("u_mvp", vp_matrix);
-        shader.set_uniform_if_exists("u_color", vec3(0.84, 0.37, 0.8));
-        shader.set_uniform_if_exists("u_pmin", surface.root->aabb.pmin);
-        shader.set_uniform_if_exists("u_pmax", surface.root->aabb.pmax);
         shader.set_uniform("u_ambient", 0.3f);
         shader.set_uniform("u_alpha", 1.0f);
         shader.set_uniform("u_camera_front", camera.get_direction());
