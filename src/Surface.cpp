@@ -6,11 +6,7 @@
 #include "Surface.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <cstddef>
-#include <unordered_map>
-#include <unordered_set>
-#include "maths/functions.hpp"
 #include "maths/geometry.hpp"
 #include "utility/LifetimeLogger.hpp"
 #include "marching_cube_tables.hpp"
@@ -19,20 +15,8 @@
     return THRESHOLD - root->potential(point);
 }
 
-[[nodiscard]] vec3 Surface::gradient(const vec3& pos) const {
-    float x = implicit(vec3(pos[0] + EPSILON, pos[1], pos[2])) - implicit(vec3(pos[0] - EPSILON, pos[1], pos[2]));
-    float y = implicit(vec3(pos[0], pos[1] + EPSILON, pos[2])) - implicit(vec3(pos[0], pos[1] - EPSILON, pos[2]));
-    float z = implicit(vec3(pos[0], pos[1], pos[2] + EPSILON)) - implicit(vec3(pos[0], pos[1], pos[2] - EPSILON));
-
-    return vec3(x, y, z) * (0.5f / EPSILON);
-}
-
-[[nodiscard]] vec3 Surface::normal(const vec3& pos) const {
-    return normalize(gradient(pos));
-}
-
 [[nodiscard]] vec3 Surface::dichotomy(vec3 a, vec3 b, float va, float vb, float length) const {
-    int ia = va > 0.0 ? 1 : -1;
+    int ia = va > 0.0f ? 1 : -1;
 
     vec3 c = (vb * a - va * b) / (vb - va);
 

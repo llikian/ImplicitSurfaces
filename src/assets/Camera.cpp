@@ -18,7 +18,7 @@
 
 Camera::Camera(const vec3& position, float fov, float near_distance, float far_distance)
     : sensitivity(0.1f),
-      movement_speed(20.0f),
+      movement_speed(10.0f),
       position(position),
       pitch(0.0f),
       yaw(-PIf / 2.0f),
@@ -32,7 +32,7 @@ Camera::Camera(const vec3& position, float fov, float near_distance, float far_d
 
 Camera::Camera(const vec3& position, const vec3& target, float fov, float near_distance, float far_distance)
     : sensitivity(0.1f),
-      movement_speed(20.0f),
+      movement_speed(10.0f),
       position(position),
       fov(fov),
       near_distance(near_distance),

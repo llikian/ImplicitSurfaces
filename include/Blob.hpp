@@ -58,6 +58,25 @@ private:
     float radius_sqr;
 };
 
+struct BoxBlob : Blob {
+    BoxBlob(float scale, const vec3& center, const vec3& front, const vec3& right, float height);
+
+    AABB get_aabb_and_blob_count(std::size_t& count) override;
+
+    [[nodiscard]] float potential(const vec3& point) const override;
+
+    vec3 center;
+    vec3 front;
+    vec3 right;
+
+private:
+    vec3 up;
+
+    vec3 axis_x;
+    vec3 axis_y;
+    vec3 axis_z;
+};
+
 template <float PotentialFunc(float, float), //
           AABB AABBFunc(const AABB&, const AABB&)>
 struct OperationBlob : Blob {
@@ -85,9 +104,9 @@ struct OperationBlob : Blob {
 
 namespace PotentialFunctions {
     inline constexpr auto sum = [](float a, float b) { return a + b; };
-    inline constexpr auto min = [](float a, float b) { return a < b ? a : b; };
-    inline constexpr auto max = [](float a, float b) { return a > b ? a : b; };
-    inline constexpr auto difference = [](float a, float b) { return a < b ? a : 2.0f * THRESHOLD - b; };
+    inline constexpr auto min = [](float a, float b) { return std::min(a, b); };
+    inline constexpr auto max = [](float a, float b) { return std::max(a, b); };
+    inline constexpr auto difference = [](float a, float b) { return std::min(a, 2.0f * THRESHOLD - b); };
 };
 
 using BlendBlob = OperationBlob<PotentialFunctions::sum, aabb_union>;

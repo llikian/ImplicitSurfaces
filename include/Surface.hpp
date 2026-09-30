@@ -19,8 +19,6 @@ public:
 
     [[nodiscard]] float implicit(const vec3& point) const;
 
-    [[nodiscard]] vec3 gradient(const vec3& pos) const;
-    [[nodiscard]] vec3 normal(const vec3& pos) const;
     [[nodiscard]] vec3 dichotomy(vec3 a, vec3 b, float va, float vb, float length) const;
 
     [[nodiscard]] Mesh compute_mesh(int n);

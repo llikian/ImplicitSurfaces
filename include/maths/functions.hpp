@@ -5,12 +5,23 @@
 
 #pragma once
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include "vec3.hpp"
 
 inline float pow2(float x) {
     return x * x;
+}
+
+inline float pow4(float x) {
+    float x2 = x * x;
+    return x2 * x2;
+}
+
+inline float pow8(float x) {
+    float x2 = x * x;
+    float x4 = x2 * x2;
+    return x4 * x4;
 }
 
 inline float length2(const vec3& vec) {

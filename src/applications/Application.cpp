@@ -60,7 +60,13 @@ void Application::run() {
     Surface surface;
 
     // Blob* root = add_recursive_spheres(8);
-    Blob* root = add_recursive_spheres(1);
+    // Blob* root = add_recursive_spheres(1);
+
+    BoxBlob box(1.0f, vec3(0.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0, 0.0f, 1.0f), 5.0f);
+    SphereBlob sphere(1.0f, vec3(0.0f, 0.0f, 0.0f), 1.5f);
+    DifferenceBlob diff(1.0f, &box, &sphere);
+
+    Blob* root = &diff;
 
     surface.root = root;
     Mesh surface_mesh = surface.compute_mesh(1 << 7);
