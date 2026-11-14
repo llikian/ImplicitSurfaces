@@ -27,7 +27,7 @@ AABB BlendBlob::get_aabb_and_blob_count(std::size_t& count) {
     return aabb;
 }
 
-[[nodiscard]] float BlendBlob::potential(vec3 point) const {
+[[nodiscard]] float BlendBlob::potential(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return 0.0f;
     }
@@ -35,7 +35,7 @@ AABB BlendBlob::get_aabb_and_blob_count(std::size_t& count) {
     return scale * left->potential(point) + right->potential(point);
 }
 
-[[nodiscard]] Sample BlendBlob::sample(vec3 point) const {
+[[nodiscard]] Sample BlendBlob::sample(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return Sample(0.0f, vec3(0.0f));
     }
@@ -63,7 +63,7 @@ AABB UnionBlob::get_aabb_and_blob_count(std::size_t& count) {
     return aabb;
 }
 
-[[nodiscard]] float UnionBlob::potential(vec3 point) const {
+[[nodiscard]] float UnionBlob::potential(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return 0.0f;
     }
@@ -71,7 +71,7 @@ AABB UnionBlob::get_aabb_and_blob_count(std::size_t& count) {
     return scale * std::max(left->potential(point), right->potential(point));
 }
 
-[[nodiscard]] Sample UnionBlob::sample(vec3 point) const {
+[[nodiscard]] Sample UnionBlob::sample(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return Sample(0.0f, vec3(0.0f));
     }
@@ -94,7 +94,7 @@ AABB IntersectionBlob::get_aabb_and_blob_count(std::size_t& count) {
     return aabb;
 }
 
-[[nodiscard]] float IntersectionBlob::potential(vec3 point) const {
+[[nodiscard]] float IntersectionBlob::potential(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return 0.0f;
     }
@@ -102,7 +102,7 @@ AABB IntersectionBlob::get_aabb_and_blob_count(std::size_t& count) {
     return scale * std::min(left->potential(point), right->potential(point));
 }
 
-[[nodiscard]] Sample IntersectionBlob::sample(vec3 point) const {
+[[nodiscard]] Sample IntersectionBlob::sample(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return Sample(0.0f, vec3(0.0f));
     }
@@ -126,7 +126,7 @@ AABB DifferenceBlob::get_aabb_and_blob_count(std::size_t& count) {
     return aabb;
 }
 
-[[nodiscard]] float DifferenceBlob::potential(vec3 point) const {
+[[nodiscard]] float DifferenceBlob::potential(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return 0.0f;
     }
@@ -134,7 +134,7 @@ AABB DifferenceBlob::get_aabb_and_blob_count(std::size_t& count) {
     return scale * std::min(left->potential(point), 2.0f * THRESHOLD - right->potential(point));
 }
 
-[[nodiscard]] Sample DifferenceBlob::sample(vec3 point) const {
+[[nodiscard]] Sample DifferenceBlob::sample(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return Sample(0.0f, vec3(0.0f));
     }

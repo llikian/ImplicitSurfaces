@@ -12,9 +12,8 @@ struct CapsuleBlob : Blob {
 
     AABB get_aabb_and_blob_count(std::size_t& count) override;
 
-    [[nodiscard]] float potential(vec3 point) const override;
-
-    [[nodiscard]] Sample sample(vec3 point) const override { return Sample(potential(point), color); }
+    [[nodiscard]] float potential(const vec3& point) const override;
+    [[nodiscard]] Sample sample(const vec3& point) const override;
 
     vec3 color;
 

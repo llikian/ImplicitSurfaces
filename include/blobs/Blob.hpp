@@ -28,8 +28,8 @@ struct Blob {
 
     virtual AABB get_aabb_and_blob_count(std::size_t& count) = 0;
 
-    [[nodiscard]] virtual float potential(vec3 point) const = 0;
-    [[nodiscard]] virtual Sample sample(vec3 point) const = 0;
+    [[nodiscard]] virtual float potential(const vec3& point) const = 0;
+    [[nodiscard]] virtual Sample sample(const vec3& point) const = 0;
 
     float scale;
 

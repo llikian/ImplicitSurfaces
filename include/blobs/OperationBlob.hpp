@@ -24,30 +24,30 @@ struct BlendBlob : OperationBlob {
     using OperationBlob::OperationBlob;
 
     AABB get_aabb_and_blob_count(std::size_t& count) override;
-    [[nodiscard]] float potential(vec3 point) const override;
-    [[nodiscard]] Sample sample(vec3 point) const override;
+    [[nodiscard]] float potential(const vec3& point) const override;
+    [[nodiscard]] Sample sample(const vec3& point) const override;
 };
 
 struct UnionBlob : OperationBlob {
     using OperationBlob::OperationBlob;
 
     AABB get_aabb_and_blob_count(std::size_t& count) override;
-    [[nodiscard]] float potential(vec3 point) const override;
-    [[nodiscard]] Sample sample(vec3 point) const override;
+    [[nodiscard]] float potential(const vec3& point) const override;
+    [[nodiscard]] Sample sample(const vec3& point) const override;
 };
 
 struct IntersectionBlob : OperationBlob {
     using OperationBlob::OperationBlob;
 
     AABB get_aabb_and_blob_count(std::size_t& count) override;
-    [[nodiscard]] float potential(vec3 point) const override;
-    [[nodiscard]] Sample sample(vec3 point) const override;
+    [[nodiscard]] float potential(const vec3& point) const override;
+    [[nodiscard]] Sample sample(const vec3& point) const override;
 };
 
 struct DifferenceBlob : OperationBlob {
     using OperationBlob::OperationBlob;
 
     AABB get_aabb_and_blob_count(std::size_t& count) override;
-    [[nodiscard]] float potential(vec3 point) const override;
-    [[nodiscard]] Sample sample(vec3 point) const override;
+    [[nodiscard]] float potential(const vec3& point) const override;
+    [[nodiscard]] Sample sample(const vec3& point) const override;
 };

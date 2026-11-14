@@ -17,7 +17,7 @@ std::unique_ptr<Blob> make_transform_blob(BlobTransformType transform_type, floa
 TransformBlob::TransformBlob(float scale) : Blob(scale), child(nullptr) {
 }
 
-[[nodiscard]] float TransformBlob::potential(vec3 point) const {
+[[nodiscard]] float TransformBlob::potential(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return 0.0f;
     }
@@ -25,7 +25,7 @@ TransformBlob::TransformBlob(float scale) : Blob(scale), child(nullptr) {
     return scale * child->potential(transform(point));
 }
 
-[[nodiscard]] Sample TransformBlob::sample(vec3 point) const {
+[[nodiscard]] Sample TransformBlob::sample(const vec3& point) const {
     if(!aabb.is_point_inside(point)) {
         return Sample(0.0f, vec3(0.0f));
     }

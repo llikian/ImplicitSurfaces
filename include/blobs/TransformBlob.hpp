@@ -19,8 +19,8 @@ std::unique_ptr<Blob> make_transform_blob(BlobTransformType transform_type, floa
 struct TransformBlob : Blob {
     explicit TransformBlob(float scale);
 
-    [[nodiscard]] float potential(vec3 point) const override;
-    [[nodiscard]] Sample sample(vec3 point) const override;
+    [[nodiscard]] float potential(const vec3& point) const override;
+    [[nodiscard]] Sample sample(const vec3& point) const override;
 
     virtual vec3 transform(const vec3& point) const = 0;
 

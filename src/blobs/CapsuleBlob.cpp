@@ -26,7 +26,7 @@ AABB CapsuleBlob::get_aabb_and_blob_count(std::size_t& count) {
     return aabb;
 }
 
-[[nodiscard]] float CapsuleBlob::potential(vec3 point) const {
+[[nodiscard]] float CapsuleBlob::potential(const vec3& point) const {
     vec3 AB = B - A;
     float dist_AB_sqr = length2(AB);
 
@@ -38,4 +38,8 @@ AABB CapsuleBlob::get_aabb_and_blob_count(std::size_t& count) {
         return 0.0f;
     }
     return scale * attenuation(distance_sqr);
+}
+
+[[nodiscard]] Sample CapsuleBlob::sample(const vec3& point) const {
+    return Sample(potential(point), color);
 }
