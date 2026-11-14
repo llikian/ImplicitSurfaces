@@ -224,6 +224,11 @@ void NodeEditor::draw_add_node_menu() {
                                            add_node_position);
             }
 
+            if(ImGui::MenuItem("Transform")) {
+                move_and_snap_node_to_grid(add_node<NENodeTransformBlob>(1.0f, BlobTransformType::translation).id,
+                                           add_node_position);
+            }
+
         } else {
             if(attributes.at(add_node_start_attribute)->io_type == IOType::IN && ImGui::MenuItem("Sphere")) {
                 const auto& node = add_node<NENodeSphereBlob>(1.0f, vec3(0.0f), 1.0f);
@@ -246,6 +251,17 @@ void NodeEditor::draw_add_node_menu() {
                     add_link(add_node_start_attribute, node.attr_blob.id);
                 } else if(attributes.at(add_node_start_attribute)->io_type == IOType::OUT) {
                     add_link(add_node_start_attribute, node.attr_blob_left.id);
+                }
+            }
+
+            if(ImGui::MenuItem("Transform")) {
+                const auto& node = add_node<NENodeTransformBlob>(1.0f, BlobTransformType::translation);
+                move_and_snap_node_to_grid(node.id, add_node_position);
+
+                if(attributes.at(add_node_start_attribute)->io_type == IOType::IN) {
+                    add_link(add_node_start_attribute, node.attr_blob.id);
+                } else if(attributes.at(add_node_start_attribute)->io_type == IOType::OUT) {
+                    add_link(add_node_start_attribute, node.attr_blob_child.id);
                 }
             }
         }

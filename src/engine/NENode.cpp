@@ -104,8 +104,9 @@ void NENodeCapsuleBlob::get_attributes(std::vector<NEAttribute*>& attributes) {
     attributes.push_back(&attr_blob);
 }
 
-NENodeOperationBlob::NENodeOperationBlob(int id, int& next_attribute_index, float blob_scale, BlobOpType op_type)
-    : NENodeBlob(id, std::make_unique<OperationBlob>(blob_scale, op_type)),
+NENodeOperationBlob::NENodeOperationBlob(int id, int& next_attribute_index, float scale, BlobOpType op_type)
+    : NENodeBlob(id, nullptr),
+      op_type(op_type),
       attr_blob_left(next_attribute_index++, this, IOType::IN, "left", IM_COL_MAGENTA, ImNodesPinShape_TriangleFilled),
       attr_blob_right(next_attribute_index++,
                       this,
@@ -114,6 +115,7 @@ NENodeOperationBlob::NENodeOperationBlob(int id, int& next_attribute_index, floa
                       IM_COL_MAGENTA,
                       ImNodesPinShape_TriangleFilled),
       attr_blob(next_attribute_index++, this, IOType::OUT, "blob", IM_COL_MAGENTA, ImNodesPinShape_TriangleFilled) {
+    blob = make_op_blob(op_type, scale);
     title = "Operation";
     title_bar_color = IM_COL_DARKEN(IM_COL_GREEN, 0.5f);
 }
@@ -121,21 +123,27 @@ NENodeOperationBlob::NENodeOperationBlob(int id, int& next_attribute_index, floa
 void NENodeOperationBlob::draw_attributes() {
     auto& b = *static_cast<OperationBlob*>(blob.get());
 
-    ImGui::InputFloat("scale", &b.scale);
-
     ImGui::Text("Operation Type:");
-    if(ImGui::RadioButton("Blend", b.op_type == BlobOpType::BLEND)) {
-        b.op_type = BlobOpType::BLEND;
+    if(ImGui::RadioButton("Blend", op_type == BlobOpType::BLEND)) {
+        op_type = BlobOpType::BLEND;
+        blob = make_op_blob(op_type, b.scale);
     }
-    if(ImGui::RadioButton("Union", b.op_type == BlobOpType::UNION)) {
-        b.op_type = BlobOpType::UNION;
+    if(ImGui::RadioButton("Union", op_type == BlobOpType::UNION)) {
+        op_type = BlobOpType::UNION;
+        blob = make_op_blob(op_type, b.scale);
     }
-    if(ImGui::RadioButton("Intersection", b.op_type == BlobOpType::INTERSECTION)) {
-        b.op_type = BlobOpType::INTERSECTION;
+    if(ImGui::RadioButton("Intersection", op_type == BlobOpType::INTERSECTION)) {
+        op_type = BlobOpType::INTERSECTION;
+        blob = make_op_blob(op_type, b.scale);
     }
-    if(ImGui::RadioButton("Difference", b.op_type == BlobOpType::DIFFERENCE)) {
-        b.op_type = BlobOpType::DIFFERENCE;
+    if(ImGui::RadioButton("Difference", op_type == BlobOpType::DIFFERENCE)) {
+        op_type = BlobOpType::DIFFERENCE;
+        blob = make_op_blob(op_type, b.scale);
     }
+
+    ImGui::NewLine();
+
+    ImGui::InputFloat("scale", &b.scale);
 
     ImGui::NewLine();
 
@@ -159,18 +167,86 @@ void NENodeOperationBlob::get_attributes(std::vector<NEAttribute*>& attributes) 
 }
 
 Blob* NENodeOperationBlob::get_blob() const {
-    if(!attr_blob_left.linked_attribute || !attr_blob_right.linked_attribute) {
+    if(attr_blob_left.linked_attribute == nullptr || attr_blob_right.linked_attribute == nullptr) {
         return nullptr;
     }
 
     Blob* left = attr_blob_left.linked_attribute->node->get_blob();
     Blob* right = attr_blob_right.linked_attribute->node->get_blob();
-    if(!left || !right) {
+    if(left == nullptr || right == nullptr) {
         return nullptr;
     }
 
     auto* b = static_cast<OperationBlob*>(blob.get());
     b->left = left;
     b->right = right;
+    return b;
+}
+
+NENodeTransformBlob::NENodeTransformBlob(int id,
+                                         int& next_attribute_index,
+                                         float scale,
+                                         BlobTransformType transform_type)
+
+    : NENodeBlob(id, nullptr),
+      transform_type(transform_type),
+      attr_blob_child(next_attribute_index++,
+                      this,
+                      IOType::IN,
+                      "child",
+                      IM_COL_MAGENTA,
+                      ImNodesPinShape_TriangleFilled),
+      attr_blob(next_attribute_index++, this, IOType::OUT, "blob", IM_COL_MAGENTA, ImNodesPinShape_TriangleFilled) {
+    blob = make_transform_blob(transform_type, scale);
+    title = "Transform";
+    title_bar_color = IM_COL_DARKEN(IM_COL_BLUE, 0.5f);
+}
+
+void NENodeTransformBlob::draw_attributes() {
+    auto b = static_cast<TransformBlob*>(blob.get());
+
+    ImGui::Text("Transform Type:");
+    if(ImGui::RadioButton("Translation", transform_type == BlobTransformType::translation)) {
+        transform_type = BlobTransformType::translation;
+        blob = make_transform_blob(transform_type, b->scale);
+    }
+
+    ImGui::NewLine();
+
+    ImGui::InputFloat("scale", &b->scale);
+    switch(transform_type) {
+        case BlobTransformType::translation:
+            ImGui::InputFloat3("translation", &static_cast<TranslationBlob*>(b)->translation.x);
+            break;
+    }
+
+    ImGui::NewLine();
+
+    attr_blob_child.draw_pre();
+    ImGui::TextUnformatted(attr_blob_child.name.c_str());
+    attr_blob_child.draw_post();
+
+    attr_blob.draw_pre();
+    unformatted_text_aligned_right(attr_blob.name);
+    attr_blob.draw_post();
+}
+
+void NENodeTransformBlob::get_attributes(std::vector<NEAttribute*>& attributes) {
+    attributes.push_back(&attr_blob_child);
+    attributes.push_back(&attr_blob);
+}
+
+Blob* NENodeTransformBlob::get_blob() const {
+    if(attr_blob_child.linked_attribute == nullptr) {
+        return nullptr;
+    }
+
+    Blob* child = attr_blob_child.linked_attribute->node->get_blob();
+    if(child == nullptr) {
+        return nullptr;
+    }
+
+    auto* b = static_cast<TransformBlob*>(blob.get());
+    b->child = child;
     return b;
 }

@@ -9,6 +9,7 @@
 #include "blobs/CapsuleBlob.hpp"
 #include "blobs/OperationBlob.hpp"
 #include "blobs/SphereBlob.hpp"
+#include "blobs/TransformBlob.hpp"
 #include "imgui_internal.h"
 #include "NEAttribute.hpp"
 
@@ -64,14 +65,30 @@ struct NENodeCapsuleBlob : NENodeBlob {
 };
 
 struct NENodeOperationBlob : NENodeBlob {
-    NENodeOperationBlob(int id, int& next_attribute_index, float blob_scale, BlobOpType op_type);
+    NENodeOperationBlob(int id, int& next_attribute_index, float scale, BlobOpType op_type);
 
     void draw_attributes() override;
     void get_attributes(std::vector<NEAttribute*>& attributes) override;
 
     Blob* get_blob() const override;
 
+    BlobOpType op_type;
+
     NEAttribute attr_blob_left;
     NEAttribute attr_blob_right;
+    NEAttribute attr_blob;
+};
+
+struct NENodeTransformBlob : NENodeBlob {
+    NENodeTransformBlob(int id, int& next_attribute_index, float scale, BlobTransformType transform_type);
+
+    void draw_attributes() override;
+    void get_attributes(std::vector<NEAttribute*>& attributes) override;
+
+    Blob* get_blob() const override;
+
+    BlobTransformType transform_type;
+
+    NEAttribute attr_blob_child;
     NEAttribute attr_blob;
 };
