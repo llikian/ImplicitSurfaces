@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "maths/vec4.hpp"
 #include "vec3.hpp"
 
 inline float pow2(float x) {
@@ -54,6 +55,10 @@ inline vec3 ceil(const vec3& vec) {
 
 inline vec3 lerp(const vec3& a, const vec3& b, float t) {
     return vec3(std::lerp(a.x, b.x, t), std::lerp(a.y, b.y, t), std::lerp(a.z, b.z, t));
+}
+
+inline vec4 lerp(const vec4& a, const vec4& b, float t) {
+    return vec4(std::lerp(a.x, b.x, t), std::lerp(a.y, b.y, t), std::lerp(a.z, b.z, t), std::lerp(a.w, b.w, t));
 }
 
 vec3 hue_to_rgb(unsigned short hue);

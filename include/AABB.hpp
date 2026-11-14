@@ -16,6 +16,8 @@ struct AABB {
     bool is_point_inside(const vec3& point) const;
     vec3 get_center() const;
     mat4 get_global_model_matrix() const;
+
+    AABB& operator+(const vec3& translation);
 };
 
 constexpr AABB aabb_union(const AABB& first, const AABB& second) {

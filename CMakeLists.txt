@@ -18,24 +18,35 @@ set(LIBRARY_SOURCES
     lib/imgui/backends/imgui_impl_opengl3.cpp
     lib/imgui/misc/cpp/imgui_stdlib.cpp
 
-    lib/stb/stb_image.cpp
+    lib/imnodes/imnodes.cpp
 
-    lib/tinygltf/tiny_gltf.cc
+    lib/stb/stb_image.cpp
 )
 
 set(SOURCES
     src/AABB.cpp
-    src/Blob.cpp
     src/Surface.cpp
 
     # Assets Module
     src/assets/Camera.cpp
     src/assets/Shader.cpp
+    src/assets/Texture.cpp
+
+    # Blobs Module
+    src/blobs/Blob.cpp
+    src/blobs/CapsuleBlob.cpp
+    src/blobs/OperationBlob.cpp
+    src/blobs/TransformBlob.cpp
+    src/blobs/SphereBlob.cpp
 
     # Engine Module
-    src/engine/callbacks.cpp
     src/engine/EventHandler.cpp
+    src/engine/Framebuffer.cpp
+    src/engine/NEAttribute.cpp
+    src/engine/NENode.cpp
+    src/engine/NodeEditor.cpp
     src/engine/Window.cpp
+    src/engine/callbacks.cpp
 
     # Maths Module
     src/maths/functions.cpp
@@ -51,11 +62,12 @@ set(SOURCES
     src/mesh/primitives.cpp
 
     # Utility Module
-    include/utility/ansi.hpp
     include/utility/HeapArray.hpp
-    src/utility/gl_enums.cpp
+    include/utility/ansi.hpp
     src/utility/LifetimeLogger.cpp
     src/utility/Random.cpp
+    src/utility/Timer.cpp
+    src/utility/gl_enums.cpp
 
     # Libraries
     ${LIBRARY_SOURCES}
@@ -69,8 +81,8 @@ set(INCLUDES
     lib/imgui
     lib/imgui/backends
     lib/imgui/misc/cpp
+    lib/imnodes
     lib/stb
-    lib/tinygltf
 )
 
 set(LIBRARIES

@@ -8,8 +8,8 @@
 #define GLFW_INCLUDE_NONE
 
 #include <functional>
-#include <unordered_map>
 #include <GLFW/glfw3.h>
+#include <unordered_map>
 #include "assets/Camera.hpp"
 #include "maths/vec2.hpp"
 
@@ -44,33 +44,25 @@ public:
      * the map.
      * @param key The key whose action we want to dissociate.
      */
-    static void dissociate_key_action(int key) {
-        get().do_dissociate_key_action(key);
-    }
+    static void dissociate_key_action(int key) { get().do_dissociate_key_action(key); }
 
     /**
      * @brief Polls GLFW events, handles all of them and updates all event related variables.
      */
-    static void poll_and_handle_events() {
-        get().do_poll_and_handle_events();
-    }
+    static void poll_and_handle_events() { get().do_poll_and_handle_events(); }
 
     /**
      * @brief Changes the active camera.
      * @param camera The new active camera.
      */
-    static void set_active_camera(Camera* camera) {
-        get().do_set_active_camera(camera);
-    }
+    static void set_active_camera(Camera* camera) { get().do_set_active_camera(camera); }
 
     /**
      * @brief Handles what happens when the window is resized.
      * @param width The window's new width.
      * @param height The window's new height.
      */
-    static void handle_window_size_event(int width, int height) {
-        get().do_handle_window_size_event(width, height);
-    }
+    static void handle_window_size_event(int width, int height) { get().do_handle_window_size_event(width, height); }
 
     /**
      * @brief Handles what happens when the frambuffer is resized.
@@ -85,17 +77,13 @@ public:
      * @brief Handles what happens when a key is pressed.
      * @param key The pressed key.
      */
-    static void handle_key_press_event(int key) {
-        get().do_handle_key_press_event(key);
-    }
+    static void handle_key_press_event(int key) { get().do_handle_key_press_event(key); }
 
     /**
      * @brief Handles what happens when a key is released.
      * @param key The pressed key.
      */
-    static void handle_key_release_event(int key) {
-        get().do_handle_key_release_event(key);
-    }
+    static void handle_key_release_event(int key) { get().do_handle_key_release_event(key); }
 
     /**
      * @brief Handles what happens when the mouse is moved.
@@ -160,6 +148,10 @@ public:
      * @return Whether wireframe mode is enabled.
      */
     static bool is_wireframe_enabled() { return get().b_is_wireframe_enabled; }
+
+    void toggle_cursor_visible();
+    void hide_cursor();
+    void show_cursor();
 
 private:
     /**

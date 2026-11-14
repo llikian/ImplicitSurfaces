@@ -121,3 +121,5 @@ void create_frustum_meshes(Mesh& faces, Mesh& lines, const Camera& camera);
  * @param subdivisions How many times to subdivide.
  */
 void create_icosphere_mesh(Mesh& mesh, unsigned int subdivisions);
+
+void create_wireframe_sphere_mesh(Mesh& mesh, unsigned int subdivisions);

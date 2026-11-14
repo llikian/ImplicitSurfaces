@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <cstddef>
 #include "maths/geometry.hpp"
-#include "utility/LifetimeLogger.hpp"
+#include "utility/Timer.hpp"
 #include "marching_cube_tables.hpp"
 
 [[nodiscard]] float Surface::implicit(const vec3& point) const {
@@ -36,15 +36,20 @@
     return c;
 }
 
-[[nodiscard]] Mesh Surface::compute_mesh(int n) {
-    if(root == nullptr) { throw std::runtime_error("Can't create the mesh for an empty implicit surface"); }
+[[nodiscard]] vec3 Surface::gradient(const vec3& p) const {
+    return vec3(implicit(vec3(p.x + EPSILON, p.y, p.z)) - implicit(vec3(p.x - EPSILON, p.y, p.z)),
+                implicit(vec3(p.x, p.y + EPSILON, p.z)) - implicit(vec3(p.x, p.y - EPSILON, p.z)),
+                implicit(vec3(p.x, p.y, p.z + EPSILON)) - implicit(vec3(p.x, p.y, p.z - EPSILON)));
+}
 
-    LifetimeLogger lifetime_logger("Mesh creation took: ");
+void Surface::compute_mesh(Mesh& mesh, int n, const AABB& region) {
+    if(root == nullptr) {
+        throw std::runtime_error("Can't create the mesh for an empty implicit surface");
+    }
 
-    std::size_t blobs_count = 0;
-    AABB region = root->get_aabb_and_blob_count(blobs_count);
+    Timer timer;
 
-    std::cout << "The scene contains " << blobs_count << " blobs.\n";
+    std::cout << "Precision: " << n << '\n';
 
     std::vector<vec3> vertices;
     std::vector<int> triangles;
@@ -174,14 +179,30 @@
         for(int i = nax; i < nbx - 1; i++) {
             for(int j = nay; j < nby - 1; j++) {
                 int cubeindex = 0;
-                if(a[i * ny + j] < 0.0) { cubeindex |= 1; }
-                if(a[(i + 1) * ny + j] < 0.0) { cubeindex |= 2; }
-                if(a[i * ny + j + 1] < 0.0) { cubeindex |= 4; }
-                if(a[(i + 1) * ny + j + 1] < 0.0) { cubeindex |= 8; }
-                if(b[i * ny + j] < 0.0) { cubeindex |= 16; }
-                if(b[(i + 1) * ny + j] < 0.0) { cubeindex |= 32; }
-                if(b[i * ny + j + 1] < 0.0) { cubeindex |= 64; }
-                if(b[(i + 1) * ny + j + 1] < 0.0) { cubeindex |= 128; }
+                if(a[i * ny + j] < 0.0) {
+                    cubeindex |= 1;
+                }
+                if(a[(i + 1) * ny + j] < 0.0) {
+                    cubeindex |= 2;
+                }
+                if(a[i * ny + j + 1] < 0.0) {
+                    cubeindex |= 4;
+                }
+                if(a[(i + 1) * ny + j + 1] < 0.0) {
+                    cubeindex |= 8;
+                }
+                if(b[i * ny + j] < 0.0) {
+                    cubeindex |= 16;
+                }
+                if(b[(i + 1) * ny + j] < 0.0) {
+                    cubeindex |= 32;
+                }
+                if(b[i * ny + j + 1] < 0.0) {
+                    cubeindex |= 64;
+                }
+                if(b[(i + 1) * ny + j + 1] < 0.0) {
+                    cubeindex |= 128;
+                }
 
                 // Cube is straddling the surface
                 if((cubeindex != 255) && (cubeindex != 0)) {
@@ -226,33 +247,26 @@
     delete[] eby;
     delete[] ez;
 
-    Mesh mesh;
+    std::cout << "Marching cube algorithm took " << timer.elapsed_time() << "s\n";
+    timer.reset();
+
     mesh.set_primitive(MeshPrimitive::TRIANGLES);
     mesh.enable_attribute(ATTRIBUTE_NORMAL);
     mesh.enable_attribute(ATTRIBUTE_COLOR);
 
     mesh.reserve_vertices_and_indices(vertices.size(), triangles.size());
-    std::vector normals(vertices.size(), vec3(0.0f));
 
     for(std::size_t i = 0; i + 2 < triangles.size(); i += 3) {
         mesh.add_triangle(triangles[i], triangles[i + 2], triangles[i + 1]);
-
-        const vec3 normal = cross(vertices[triangles[i + 2]] - vertices[triangles[i]],
-                                  vertices[triangles[i + 1]] - vertices[triangles[i]]);
-
-        normals[triangles[i]] += normal;
-        normals[triangles[i + 1]] += normal;
-        normals[triangles[i + 2]] += normal;
     }
 
-    for(std::size_t i = 0; i < vertices.size(); ++i) {
-        mesh.add_vertex(vertices[i], normalize(normals[i]), root->get_color(vertices[i]));
+    for(const vec3& vertex : vertices) {
+        mesh.add_vertex(vertex, normalize(gradient(vertex)), root->sample(vertex).color);
     }
 
     mesh.bind_buffers();
 
-    std::cout << "Vertices: " << mesh.get_vertices_amount() << '\n';
-    std::cout << "Triangles: " << mesh.get_indices_amount() / 3 << '\n';
-
-    return mesh;
+    std::cout << "Mesh creation took " << timer.elapsed_time() << "s\n";
+    std::cout << "  Vertex Count  : " << mesh.get_vertices_amount() << '\n';
+    std::cout << "  Triangle Count: " << mesh.get_indices_amount() / 3 << '\n';
 }

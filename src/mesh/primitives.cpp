@@ -19,12 +19,12 @@ void create_sphere_mesh(Mesh& mesh, unsigned int horizontal_slices, unsigned int
     const float theta_step = PI_F / horizontal_slices; // theta in [-PI/2 ; PI/2]
     const float phi_step = TAU_F / vertical_slices;    // phi in [0 ; 2PI]
 
-    for(unsigned int i = 0 ; i <= horizontal_slices ; ++i) {
+    for(unsigned int i = 0; i <= horizontal_slices; ++i) {
         float theta = PI_HALF_F - i * theta_step;
         float cos_theta = std::cos(theta);
         vec3 point(0.0f, std::sin(theta), 0.0f);
 
-        for(unsigned int j = 0 ; j <= vertical_slices ; ++j) {
+        for(unsigned int j = 0; j <= vertical_slices; ++j) {
             float phi = j * phi_step;
             point.x = cos_theta * std::cos(phi);
             point.z = cos_theta * std::sin(phi);
@@ -34,25 +34,18 @@ void create_sphere_mesh(Mesh& mesh, unsigned int horizontal_slices, unsigned int
         }
     }
 
-    auto index = [&vertical_slices](int i, int j) -> unsigned int {
-        return j + i * (vertical_slices + 1);
-    };
+    auto index = [&vertical_slices](int i, int j) -> unsigned int { return j + i * (vertical_slices + 1); };
 
-    for(unsigned int j = 0 ; j < vertical_slices ; ++j) {
+    for(unsigned int j = 0; j < vertical_slices; ++j) {
         mesh.add_triangle(index(0, j), index(1, j + 1), index(1, j));
         mesh.add_triangle(index(horizontal_slices - 1, j),
                           index(horizontal_slices - 1, j + 1),
                           index(horizontal_slices, j));
     }
 
-    for(unsigned int i = 1 ; i < horizontal_slices ; ++i) {
-        for(unsigned int j = 0 ; j < vertical_slices ; ++j) {
-            mesh.add_face(
-                index(i + 1, j + 1),
-                index(i + 1, j),
-                index(i, j),
-                index(i, j + 1)
-            );
+    for(unsigned int i = 1; i < horizontal_slices; ++i) {
+        for(unsigned int j = 0; j < vertical_slices; ++j) {
+            mesh.add_face(index(i + 1, j + 1), index(i + 1, j), index(i, j), index(i, j + 1));
         }
     }
 
@@ -93,14 +86,9 @@ void create_cube_mesh(Mesh& mesh) {
         uvec4(1, 3, 7, 5)  // 5: BACK
     };
 
-    static const vec2 tex_coords[4] {
-        vec2(0.0f, 1.0f),
-        vec2(0.0f, 0.0f),
-        vec2(1.0f, 0.0f),
-        vec2(1.0f, 1.0f)
-    };
+    static const vec2 tex_coords[4] { vec2(0.0f, 1.0f), vec2(0.0f, 0.0f), vec2(1.0f, 0.0f), vec2(1.0f, 1.0f) };
 
-    for(unsigned int i = 0 ; i < 6 ; ++i) {
+    for(unsigned int i = 0; i < 6; ++i) {
         mesh.add_vertex(positions[faces[i].x], normals[i], tex_coords[0]);
         mesh.add_vertex(positions[faces[i].y], normals[i], tex_coords[1]);
         mesh.add_vertex(positions[faces[i].z], normals[i], tex_coords[2]);
@@ -201,11 +189,7 @@ void create_axes_mesh(Mesh& mesh, float length) {
     mesh.enable_attribute(ATTRIBUTE_COLOR);
 
     const vec3 origin(0.0f, 0.0f, 0.0f);
-    const vec3 axes[3] {
-        vec3(1.0f, 0.0f, 0.0f),
-        vec3(0.0f, 1.0f, 0.0f),
-        vec3(0.0f, 0.0f, 1.0f)
-    };
+    const vec3 axes[3] { vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f) };
 
     for(const vec3& axis : axes) {
         mesh.add_vertex(origin, axis);
@@ -241,20 +225,14 @@ void create_pyramid_mesh(Mesh& mesh, const vec3& A, const vec3& B, const vec3& C
 }
 
 void create_frustum_meshes(Mesh& faces, Mesh& lines, const Camera& camera) {
-    static const vec4 projection_space_points[8] {
-        vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        vec4(1.0f, 1.0f, -1.0f, 1.0f),
-        vec4(1.0f, -1.0f, 1.0f, 1.0f),
-        vec4(1.0f, -1.0f, -1.0f, 1.0f),
-        vec4(-1.0f, 1.0f, 1.0f, 1.0f),
-        vec4(-1.0f, 1.0f, -1.0f, 1.0f),
-        vec4(-1.0f, -1.0f, 1.0f, 1.0f),
-        vec4(-1.0f, -1.0f, -1.0f, 1.0f)
-    };
+    static const vec4 projection_space_points[8] { vec4(1.0f, 1.0f, 1.0f, 1.0f),   vec4(1.0f, 1.0f, -1.0f, 1.0f),
+                                                   vec4(1.0f, -1.0f, 1.0f, 1.0f),  vec4(1.0f, -1.0f, -1.0f, 1.0f),
+                                                   vec4(-1.0f, 1.0f, 1.0f, 1.0f),  vec4(-1.0f, 1.0f, -1.0f, 1.0f),
+                                                   vec4(-1.0f, -1.0f, 1.0f, 1.0f), vec4(-1.0f, -1.0f, -1.0f, 1.0f) };
 
     vec4 points[8];
     mat4 inverse_projection = camera.get_inverse_projection_matrix();
-    for(int i = 0 ; i < 8 ; ++i) {
+    for(int i = 0; i < 8; ++i) {
         points[i] = inverse_projection * projection_space_points[i];
         points[i] /= points[i].w;
     }
@@ -318,18 +296,18 @@ void create_icosphere_mesh(Mesh& mesh, unsigned int subdivisions) {
     mesh.enable_attribute(ATTRIBUTE_TEX_COORDS);
 
     static constexpr unsigned int faces[12][5] {
-        { 13, 5, 18, 4, 12 },
-        { 12, 4, 10, 8, 0 },
-        { 13, 12, 0, 16, 1 },
-        { 13, 1, 9, 11, 5 },
-        { 1, 16, 17, 3, 9 },
-        { 0, 8, 2, 17, 16 },
-        { 5, 11, 7, 19, 18 },
-        { 4, 18, 19, 6, 10 },
-        { 9, 3, 15, 7, 11 },
-        { 10, 6, 14, 2, 8 },
-        { 17, 2, 14, 15, 3 },
-        { 19, 7, 15, 14, 6 }
+        { 13, 5,  18, 4,  12 },
+        { 12, 4,  10, 8,  0  },
+        { 13, 12, 0,  16, 1  },
+        { 13, 1,  9,  11, 5  },
+        { 1,  16, 17, 3,  9  },
+        { 0,  8,  2,  17, 16 },
+        { 5,  11, 7,  19, 18 },
+        { 4,  18, 19, 6,  10 },
+        { 9,  3,  15, 7,  11 },
+        { 10, 6,  14, 2,  8  },
+        { 17, 2,  14, 15, 3  },
+        { 19, 7,  15, 14, 6  }
     };
 
     std::vector<vec3> vertices {
@@ -360,30 +338,27 @@ void create_icosphere_mesh(Mesh& mesh, unsigned int subdivisions) {
 
     std::function<void(unsigned int, unsigned int, unsigned int, unsigned int)> add_triangle =
         [&](unsigned int A, unsigned int B, unsigned int C, unsigned int depth) {
-        if(depth > 0) {
-            vertices.push_back(0.5f * (vertices[A] + vertices[B]));
-            unsigned int AB = vertices.size() - 1;
-            vertices.push_back(0.5f * (vertices[B] + vertices[C]));
-            unsigned int BC = vertices.size() - 1;
-            vertices.push_back(0.5f * (vertices[C] + vertices[A]));
-            unsigned int CA = vertices.size() - 1;
+            if(depth > 0) {
+                vertices.push_back(0.5f * (vertices[A] + vertices[B]));
+                unsigned int AB = vertices.size() - 1;
+                vertices.push_back(0.5f * (vertices[B] + vertices[C]));
+                unsigned int BC = vertices.size() - 1;
+                vertices.push_back(0.5f * (vertices[C] + vertices[A]));
+                unsigned int CA = vertices.size() - 1;
 
-            add_triangle(A, AB, CA, depth - 1);
-            add_triangle(AB, B, BC, depth - 1);
-            add_triangle(CA, BC, C, depth - 1);
-            add_triangle(AB, BC, CA, depth - 1);
-        } else {
-            mesh.add_triangle(A, B, C);
-        }
-    };
+                add_triangle(A, AB, CA, depth - 1);
+                add_triangle(AB, B, BC, depth - 1);
+                add_triangle(CA, BC, C, depth - 1);
+                add_triangle(AB, BC, CA, depth - 1);
+            } else {
+                mesh.add_triangle(A, B, C);
+            }
+        };
 
-    for(unsigned int i = 0 ; i < 12 ; ++i) {
+    for(unsigned int i = 0; i < 12; ++i) {
         const unsigned int* face = faces[i];
-        vertices.push_back(0.2f * (vertices[face[0]]
-                                   + vertices[face[1]]
-                                   + vertices[face[2]]
-                                   + vertices[face[3]]
-                                   + vertices[face[4]]));
+        vertices.push_back(
+            0.2f * (vertices[face[0]] + vertices[face[1]] + vertices[face[2]] + vertices[face[3]] + vertices[face[4]]));
 
         unsigned int index = vertices.size() - 1;
 
@@ -399,6 +374,33 @@ void create_icosphere_mesh(Mesh& mesh, unsigned int subdivisions) {
         vec2 tex_coords(std::atan2(project_on_sphere.x, project_on_sphere.z) / (2.0f * PI_F) + 0.5f,
                         0.5f + 0.5f * project_on_sphere.y);
         mesh.add_vertex(project_on_sphere, project_on_sphere, tex_coords);
+    }
+
+    mesh.bind_buffers();
+}
+
+void create_wireframe_sphere_mesh(Mesh& mesh, unsigned int subdivisions) {
+    mesh.set_primitive(MeshPrimitive::LINES);
+
+    float alpha = TAU_F / static_cast<float>(subdivisions);
+
+    for(unsigned int i = 0; i < subdivisions; ++i) {
+        float angle = i * alpha;
+        float cosine = std::cos(angle);
+        float sine = std::sin(angle);
+
+        float angle1 = (i + 1) * alpha;
+        float cosine1 = std::cos(angle1);
+        float sine1 = std::sin(angle1);
+
+        mesh.add_vertex(vec3(cosine, 0.0f, sine));
+        mesh.add_vertex(vec3(cosine1, 0.0f, sine1));
+
+        mesh.add_vertex(vec3(cosine, sine, 0.0f));
+        mesh.add_vertex(vec3(cosine1, sine1, 0.0f));
+
+        mesh.add_vertex(vec3(0.0f, cosine, sine));
+        mesh.add_vertex(vec3(0.0f, cosine1, sine1));
     }
 
     mesh.bind_buffers();

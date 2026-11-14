@@ -181,8 +181,10 @@ void Camera::move_around(MovementDirection movement_direction) {
     view_matrix(2, 3) = dot(position, direction);
 }
 
-void Camera::update_projection_matrix() {
-    projection_matrix(0, 0) = 1.0f / (Window::get_aspect_ratio() * std::tan(0.5f * fov));
+void Camera::update_projection_matrix(unsigned int width, unsigned int height) {
+    float aspect_ratio;
+    aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
+    projection_matrix(0, 0) = 1.0f / (aspect_ratio * std::tan(0.5f * fov));
 }
 
 void Camera::look_at_point(const vec3& target) {

@@ -8,14 +8,7 @@
 #include "maths/mat4.hpp"
 #include "maths/vec3.hpp"
 
-enum class MovementDirection : unsigned char {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT,
-    UPWARD,
-    DOWNWARD
-};
+enum class MovementDirection : unsigned char { FORWARD, BACKWARD, LEFT, RIGHT, UPWARD, DOWNWARD };
 
 /**
  * @class Camera
@@ -144,7 +137,7 @@ public:
     /**
      * @brief Updates the projection matrix with according to the window's new aspect ratio.
      */
-    void update_projection_matrix();
+    void update_projection_matrix(unsigned int width, unsigned int height);
 
     /**
      * @brief Rotates the camera to make it look towards a certain point.

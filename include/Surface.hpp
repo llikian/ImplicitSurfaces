@@ -5,25 +5,21 @@
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
+#include <memory>
+#include "blobs/Blob.hpp"
 #include "mesh/Mesh.hpp"
-#include "AABB.hpp"
-#include "Blob.hpp"
+
+static inline constexpr float EPSILON = 1e-3;
 
 class Surface {
 public:
     Surface() : root(nullptr) {}
 
-    explicit Surface(Blob* root) : root(root) {}
-
     [[nodiscard]] float implicit(const vec3& point) const;
-
     [[nodiscard]] vec3 dichotomy(vec3 a, vec3 b, float va, float vb, float length) const;
+    [[nodiscard]] vec3 gradient(const vec3& p) const;
 
-    [[nodiscard]] Mesh compute_mesh(int n);
+    void compute_mesh(Mesh& mesh, int n, const AABB& region);
 
     Blob* root;
-
-    static inline constexpr float EPSILON = 1e-6;
 };

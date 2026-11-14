@@ -132,7 +132,9 @@ private:
 
     template <typename Type, typename... Args>
     void add_vertex_helper(unsigned int attribute_id, Type&& value, Args&&... attribute_values) {
-        while(attributes[attribute_id] == AttributeType::NONE) { ++attribute_id; }
+        while(attributes[attribute_id] == AttributeType::NONE) {
+            ++attribute_id;
+        }
 
         AttributeType type = attributes[attribute_id];
         AttributeType value_type = get_attribute_type_from_value(value);
