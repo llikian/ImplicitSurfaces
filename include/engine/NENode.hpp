@@ -92,3 +92,12 @@ struct NENodeTransformBlob : NENodeBlob {
     NEAttribute attr_blob_child;
     NEAttribute attr_blob;
 };
+
+struct NENodeBezierBlob : NENodeBlob {
+    NENodeBezierBlob(int id, int& next_attribute_index, float scale);
+
+    void draw_attributes() override;
+    void get_attributes(std::vector<NEAttribute*>& attributes) override;
+
+    NEAttribute attr_blob;
+};

@@ -19,12 +19,17 @@ std::unique_ptr<Blob> make_op_blob(BlobOpType op_type, float scale) {
 OperationBlob::OperationBlob(float scale) : Blob(scale), left(nullptr), right(nullptr) {
 }
 
-AABB BlendBlob::get_aabb_and_blob_count(std::size_t& count) {
-    ++count;
+void OperationBlob::precompute(std::size_t& count) {
+    Blob::precompute(count);
 
-    aabb = aabb_union(left->get_aabb_and_blob_count(count), right->get_aabb_and_blob_count(count));
+    left->precompute(count);
+    right->precompute(count);
+}
 
-    return aabb;
+void BlendBlob::precompute(std::size_t& count) {
+    OperationBlob::precompute(count);
+
+    aabb = aabb_union(left->aabb, right->aabb);
 }
 
 [[nodiscard]] float BlendBlob::potential(const vec3& point) const {
@@ -55,12 +60,10 @@ AABB BlendBlob::get_aabb_and_blob_count(std::size_t& count) {
     return Sample(scale * sample_left.potential + sample_right.potential, color);
 }
 
-AABB UnionBlob::get_aabb_and_blob_count(std::size_t& count) {
-    ++count;
+void UnionBlob::precompute(std::size_t& count) {
+    OperationBlob::precompute(count);
 
-    aabb = aabb_union(left->get_aabb_and_blob_count(count), right->get_aabb_and_blob_count(count));
-
-    return aabb;
+    aabb = aabb_union(left->aabb, right->aabb);
 }
 
 [[nodiscard]] float UnionBlob::potential(const vec3& point) const {
@@ -86,12 +89,10 @@ AABB UnionBlob::get_aabb_and_blob_count(std::size_t& count) {
     }
 }
 
-AABB IntersectionBlob::get_aabb_and_blob_count(std::size_t& count) {
-    ++count;
+void IntersectionBlob::precompute(std::size_t& count) {
+    OperationBlob::precompute(count);
 
-    aabb = aabb_intersect(left->get_aabb_and_blob_count(count), right->get_aabb_and_blob_count(count));
-
-    return aabb;
+    aabb = aabb_intersect(left->aabb, right->aabb);
 }
 
 [[nodiscard]] float IntersectionBlob::potential(const vec3& point) const {
@@ -117,13 +118,10 @@ AABB IntersectionBlob::get_aabb_and_blob_count(std::size_t& count) {
     }
 }
 
-AABB DifferenceBlob::get_aabb_and_blob_count(std::size_t& count) {
-    ++count;
+void DifferenceBlob::precompute(std::size_t& count) {
+    OperationBlob::precompute(count);
 
-    aabb = left->get_aabb_and_blob_count(count);
-    right->get_aabb_and_blob_count(count);
-
-    return aabb;
+    aabb = left->aabb;
 }
 
 [[nodiscard]] float DifferenceBlob::potential(const vec3& point) const {

@@ -33,22 +33,23 @@ TransformBlob::TransformBlob(float scale) : Blob(scale), child(nullptr) {
     return child->sample(transform(point));
 }
 
-AABB TranslationBlob::get_aabb_and_blob_count(std::size_t& count) {
+void TranslationBlob::precompute(std::size_t& count) {
     ++count;
 
-    aabb = child->get_aabb_and_blob_count(count) + translation;
+    child->precompute(count);
 
-    return aabb;
+    aabb = child->aabb + translation;
 }
 
 vec3 TranslationBlob::transform(const vec3& point) const {
     return point - translation;
 }
 
-AABB TwistBlob::get_aabb_and_blob_count(std::size_t& count) {
+void TwistBlob::precompute(std::size_t& count) {
     ++count;
 
-    aabb = child->get_aabb_and_blob_count(count);
+    child->precompute(count);
+    aabb = child->aabb;
 
     float x_sqr = std::max(pow2(aabb.pmin.x), pow2(aabb.pmax.x));
     float z_sqr = std::max(pow2(aabb.pmin.z), pow2(aabb.pmax.z));
@@ -56,8 +57,6 @@ AABB TwistBlob::get_aabb_and_blob_count(std::size_t& count) {
 
     aabb.pmin.x = aabb.pmin.z = -radius;
     aabb.pmax.x = aabb.pmax.z = radius;
-
-    return aabb;
 }
 
 vec3 TwistBlob::transform(const vec3& point) const {

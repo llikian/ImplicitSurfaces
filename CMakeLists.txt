@@ -33,11 +33,12 @@ set(SOURCES
     src/assets/Texture.cpp
 
     # Blobs Module
+    src/blobs/BezierBlob.cpp
     src/blobs/Blob.cpp
     src/blobs/CapsuleBlob.cpp
     src/blobs/OperationBlob.cpp
-    src/blobs/TransformBlob.cpp
     src/blobs/SphereBlob.cpp
+    src/blobs/TransformBlob.cpp
 
     # Engine Module
     src/engine/EventHandler.cpp

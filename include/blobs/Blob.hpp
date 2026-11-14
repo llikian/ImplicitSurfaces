@@ -26,8 +26,7 @@ struct Blob {
 
     virtual ~Blob() = default;
 
-    virtual AABB get_aabb_and_blob_count(std::size_t& count) = 0;
-
+    virtual void precompute(std::size_t& count);
     [[nodiscard]] virtual float potential(const vec3& point) const = 0;
     [[nodiscard]] virtual Sample sample(const vec3& point) const = 0;
 

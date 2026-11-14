@@ -4,6 +4,7 @@
  **************************************************************************************************/
 
 #include "engine/NENode.hpp"
+#include "blobs/BezierBlob.hpp"
 
 #include "imgui_stdlib.h"
 
@@ -52,9 +53,7 @@ void NENodeSphereBlob::draw_attributes() {
 
     ImGui::InputFloat("scale", &b.scale);
     ImGui::InputFloat3("center", &b.center.x);
-    if(ImGui::InputFloat("radius", &b.radius)) {
-        b.radius_sqr = b.radius * b.radius;
-    }
+    ImGui::InputFloat("radius", &b.radius);
 
     ImGui::ColorEdit3("color", &b.color.x);
 
@@ -87,10 +86,7 @@ void NENodeCapsuleBlob::draw_attributes() {
     ImGui::InputFloat("scale", &b.scale);
     ImGui::InputFloat3("start", &b.A.x);
     ImGui::InputFloat3("end", &b.B.x);
-    if(ImGui::InputFloat("radius", &b.radius)) {
-        b.radius_sqr = b.radius * b.radius;
-    }
-
+    ImGui::InputFloat("radius", &b.radius);
     ImGui::ColorEdit3("color", &b.color.x);
 
     ImGui::NewLine();
@@ -255,4 +251,40 @@ Blob* NENodeTransformBlob::get_blob() const {
     auto* b = static_cast<TransformBlob*>(blob.get());
     b->child = child;
     return b;
+}
+
+NENodeBezierBlob::NENodeBezierBlob(int id, int& next_attribute_index, float scale)
+    : NENodeBlob(id, std::make_unique<BezierBlob>(scale)),
+      attr_blob(next_attribute_index++, this, IOType::OUT, "blob", IM_COL_MAGENTA, ImNodesPinShape_TriangleFilled) {
+    title = "Bezier";
+    title_bar_color = IM_COL_DARKEN(IM_COL_RED, 0.5f);
+}
+
+void NENodeBezierBlob::draw_attributes() {
+    auto& b = *static_cast<BezierBlob*>(blob.get());
+
+    ImGui::InputFloat("scale", &b.scale);
+
+    ImGui::InputInt("spheres count", &b.spheres_count);
+
+    ImGui::InputFloat3("p0", &b.p0.x);
+    ImGui::InputFloat3("p1", &b.p1.x);
+    ImGui::InputFloat3("p2", &b.p2.x);
+    ImGui::InputFloat3("p3", &b.p3.x);
+
+    ImGui::InputFloat("start radius", &b.radius_start);
+    ImGui::InputFloat("end radius", &b.radius_end);
+
+    ImGui::ColorEdit3("start color", &b.color_start.x);
+    ImGui::ColorEdit3("end color", &b.color_end.x);
+
+    ImGui::NewLine();
+
+    attr_blob.draw_pre();
+    unformatted_text_aligned_right(attr_blob.name);
+    attr_blob.draw_post();
+}
+
+void NENodeBezierBlob::get_attributes(std::vector<NEAttribute*>& attributes) {
+    attributes.push_back(&attr_blob);
 }

@@ -9,21 +9,20 @@ SphereBlob::SphereBlob(float scale, const vec3& center, float radius, const vec3
     : Blob(scale),
       color(color),
       center(center),
-      radius(radius),
-      radius_sqr(radius * radius) {
+      radius(radius) {
 }
 
-AABB SphereBlob::get_aabb_and_blob_count(std::size_t& count) {
-    count++;
+void SphereBlob::precompute(std::size_t& count) {
+    Blob::precompute(count);
 
     aabb.pmin = center - radius;
     aabb.pmax = center + radius;
 
-    return aabb;
+    inv_radius_sqr = 1.0f / (radius * radius);
 }
 
 [[nodiscard]] float SphereBlob::potential(const vec3& point) const {
-    float distance_sqr = length2(point - center) / radius_sqr;
+    float distance_sqr = length2(point - center) * inv_radius_sqr;
     if(distance_sqr >= 1.0f) {
         return 0.0f;
     }

@@ -14,26 +14,26 @@ CapsuleBlob::CapsuleBlob(float scale, const vec3& A, const vec3& B, float radius
       A(A),
       B(B),
       radius(radius),
-      radius_sqr(radius * radius) {
+      inv_radius_sqr(1.0f / radius * radius) {
 }
 
-AABB CapsuleBlob::get_aabb_and_blob_count(std::size_t& count) {
-    count++;
+void CapsuleBlob::precompute(std::size_t& count) {
+    Blob::precompute(count);
 
     aabb.pmin = min(A, B) - radius;
     aabb.pmax = max(A, B) + radius;
 
-    return aabb;
+    AB = B - A;
+    inv_radius_sqr = 1.0f / (radius * radius);
 }
 
 [[nodiscard]] float CapsuleBlob::potential(const vec3& point) const {
-    vec3 AB = B - A;
     float dist_AB_sqr = length2(AB);
 
     float t = (dist_AB_sqr > 0.0f) ? dot(point - A, AB) / dist_AB_sqr : 0.0f;
     t = std::clamp(t, 0.0f, 1.0f);
 
-    float distance_sqr = length2(point - (A + t * AB)) / radius_sqr;
+    float distance_sqr = length2(point - (A + t * AB)) * inv_radius_sqr;
     if(distance_sqr >= 1.0f) {
         return 0.0f;
     }

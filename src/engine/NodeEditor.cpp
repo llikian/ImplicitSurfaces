@@ -186,9 +186,11 @@ void NodeEditor::delete_selection() {
 
 void NodeEditor::compute_mesh(Mesh& mesh, mat4& aabb_model, mat4& tight_aabb_model, float fov, vec3& pos) {
     std::size_t blobs_count = 0;
-    AABB aabb = surface.root->get_aabb_and_blob_count(blobs_count);
-    AABB tight_aabb = surface.compute_tight_aabb(aabb, 32);
+    surface.root->precompute(blobs_count);
     std::cout << "\nThe scene contains " << blobs_count << " blobs.\n";
+
+    AABB aabb = surface.root->aabb;
+    AABB tight_aabb = surface.compute_tight_aabb(aabb, 32);
 
     mesh.clear();
     surface.compute_mesh(mesh, precision, aabb);
@@ -221,6 +223,10 @@ void NodeEditor::draw_add_node_menu() {
                     add_node_position);
             }
 
+            if(ImGui::MenuItem("Bezier")) {
+                move_and_snap_node_to_grid(add_node<NENodeBezierBlob>(1.0f).id, add_node_position);
+            }
+
             if(ImGui::MenuItem("Operation")) {
                 move_and_snap_node_to_grid(add_node<NENodeOperationBlob>(1.0f, BlobOpType::BLEND).id,
                                            add_node_position);
@@ -241,6 +247,12 @@ void NodeEditor::draw_add_node_menu() {
             if(attributes.at(add_node_start_attribute)->io_type == IOType::IN && ImGui::MenuItem("Capsule")) {
                 const auto& node =
                     add_node<NENodeCapsuleBlob>(1.0f, vec3(0.0f, -1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), 1.0f);
+                move_and_snap_node_to_grid(node.id, add_node_position);
+                add_link(add_node_start_attribute, node.attr_blob.id);
+            }
+
+            if(attributes.at(add_node_start_attribute)->io_type == IOType::IN && ImGui::MenuItem("Bezier")) {
+                const auto& node = add_node<NENodeBezierBlob>(1.0f);
                 move_and_snap_node_to_grid(node.id, add_node_position);
                 add_link(add_node_start_attribute, node.attr_blob.id);
             }

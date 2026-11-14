@@ -21,7 +21,6 @@ struct TransformBlob : Blob {
 
     [[nodiscard]] float potential(const vec3& point) const override;
     [[nodiscard]] Sample sample(const vec3& point) const override;
-
     virtual vec3 transform(const vec3& point) const = 0;
 
     Blob* child;
@@ -30,16 +29,17 @@ struct TransformBlob : Blob {
 struct TranslationBlob : TransformBlob {
     using TransformBlob::TransformBlob;
 
-    AABB get_aabb_and_blob_count(std::size_t& count) override;
+    void precompute(std::size_t& count) override;
     vec3 transform(const vec3& point) const override;
 
     vec3 translation;
 };
 
+// Global & Local Deformations of Solid Primitives - 1984 Alan H. Barr
 struct TwistBlob : TransformBlob {
     using TransformBlob::TransformBlob;
 
-    AABB get_aabb_and_blob_count(std::size_t& count) override;
+    void precompute(std::size_t& count) override;
     vec3 transform(const vec3& point) const override;
 
     float rate;

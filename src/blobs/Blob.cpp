@@ -23,3 +23,7 @@ float attenuation_wyvill2(float distance_sqr) {
 
 Blob::Blob(float scale) : scale(scale) {
 }
+
+void Blob::precompute(std::size_t& count) {
+    ++count;
+};
