@@ -6,6 +6,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include "blobs/Blob.hpp"
 #include "mesh/Mesh.hpp"
 
@@ -19,7 +20,9 @@ public:
     [[nodiscard]] vec3 dichotomy(vec3 a, vec3 b, float va, float vb, float length) const;
     [[nodiscard]] vec3 gradient(const vec3& p) const;
 
-    void compute_mesh(Mesh& mesh, int n, const AABB& region);
+    AABB compute_tight_aabb(const AABB& region, int precision);
+
+    void compute_mesh(Mesh& mesh, int precision, const AABB& region);
 
     Blob* root;
 };

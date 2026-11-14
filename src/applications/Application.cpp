@@ -24,7 +24,9 @@ Application::Application()
     : camera(vec3(0.0f, 0.0f, 3.0f), PI_HALF_F, 0.1f, 1024.0f),
       framebuffer(Window::get_width(), Window::get_height()),
       shader({ "shaders/default.vert", "shaders/default.frag" }, "Default"),
-      line_shader({ "shaders/line_mesh.vert", "shaders/line_mesh.frag" }, "Line Mesh") {
+      line_shader({ "shaders/line_mesh.vert", "shaders/line_mesh.frag" }, "Line Mesh"),
+      show_surface_aabb(false),
+      show_surface_tight_aabb(true) {
     /* ---- Event Handler ---- */
     EventHandler::set_active_camera(&camera);
     EventHandler::associate_action_to_key(GLFW_KEY_1, false, []() {
@@ -92,9 +94,16 @@ void Application::run() {
 
         vp_matrix = camera.get_view_projection_matrix();
 
-        draw_imgui_main_window();
+        bool is_main_window_drawn = draw_imgui_main_window();
         if(node_editor.draw()) {
             update_surface_mesh();
+        }
+
+        if(is_main_window_drawn) {
+            ImGui::Begin("Debug");
+            ImGui::Checkbox("Show crude AABB", &show_surface_aabb);
+            ImGui::Checkbox("Show tight AABB", &show_surface_tight_aabb);
+            ImGui::End();
         }
 
         ImGui::Render();
@@ -105,41 +114,43 @@ void Application::run() {
 
 void Application::update_surface_mesh() {
     vec3 pos;
-    node_editor.compute_mesh(surface_mesh, surface_aabb_model, camera.get_fov(), pos);
+    node_editor.compute_mesh(surface_mesh, surface_aabb_model, surface_tight_aabb_model, camera.get_fov(), pos);
     camera.set_position(pos);
     camera.look_at_point(pos + vec3(0.0f, 0.0f, 1.0f));
-}
-
-void Application::draw_mesh(const Mesh& mesh, const mat4& model, const mat4& aabb_model) {
-    mat4 mvp = vp_matrix * model;
-    shader.use();
-    shader.set_uniform("u_ambient", 0.3f);
-    shader.set_uniform("u_alpha", 1.0f);
-    shader.set_uniform("u_camera_front", camera.get_direction());
-    shader.set_uniform("u_mvp", mvp);
-    mesh.draw();
-
-    line_shader.use();
-    glLineWidth(3.0f);
-    line_shader.set_uniform("u_mvp", mvp * aabb_model);
-    line_shader.set_uniform("u_color", vec3(1.0f));
-    wireframe_cube.draw();
-    glLineWidth(1.0f);
 }
 
 void Application::draw() {
     framebuffer.bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    draw_mesh(surface_mesh, IDENTITY, surface_aabb_model);
+    shader.use();
+    shader.set_uniform("u_ambient", 0.3f);
+    shader.set_uniform("u_alpha", 1.0f);
+    shader.set_uniform("u_camera_front", camera.get_direction());
+    shader.set_uniform("u_mvp", vp_matrix);
+    surface_mesh.draw();
+
+    line_shader.use();
+    glLineWidth(3.0f);
+    if(show_surface_aabb) {
+        line_shader.set_uniform("u_mvp", vp_matrix * surface_aabb_model);
+        line_shader.set_uniform("u_color", vec3(1.0f, 1.0f, 0.0f));
+        wireframe_cube.draw();
+    }
+    if(show_surface_tight_aabb) {
+        line_shader.set_uniform("u_mvp", vp_matrix * surface_tight_aabb_model);
+        line_shader.set_uniform("u_color", vec3(1.0f, 1.0f, 1.0f));
+        wireframe_cube.draw();
+    }
+    glLineWidth(1.0f);
 
     Framebuffer::bind_default();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 };
 
-void Application::draw_imgui_main_window() {
+bool Application::draw_imgui_main_window() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Main", nullptr, ImGuiWindowFlags_NoTitleBar);
+    bool is_window_drawn = ImGui::Begin("Main", nullptr, ImGuiWindowFlags_NoTitleBar);
     ImGui::PopStyleVar(1);
 
     ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -158,6 +169,8 @@ void Application::draw_imgui_main_window() {
     ImGui::Image(framebuffer.get_texture_id(), avail, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
     ImGui::End();
+
+    return is_window_drawn;
 }
 
 void Application::handle_dockspace() const {
@@ -165,14 +178,14 @@ void Application::handle_dockspace() const {
 
     static bool init_dock = !std::filesystem::exists("data/imgui.ini");
     if(init_dock) {
-        // ImGuiID id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
+        ImGuiID id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
 
         ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
 
         ImGui::DockBuilderDockWindow("Main", dockspace_id);
         ImGui::DockBuilderDockWindow("Node Editor", dockspace_id);
 
-        // ImGui::DockBuilderDockWindow("Debug", id_left);
+        ImGui::DockBuilderDockWindow("Debug", id_left);
 
         ImGui::DockBuilderFinish(dockspace_id);
 

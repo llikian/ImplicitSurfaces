@@ -47,7 +47,7 @@ public:
 
     void delete_selection();
 
-    void compute_mesh(Mesh& mesh, mat4& aabb_model, float fov, vec3& pos);
+    void compute_mesh(Mesh& mesh, mat4& aabb_model, mat4& aabb_tight_model, float fov, vec3& pos);
 
 private:
     void draw_add_node_menu();

@@ -42,14 +42,39 @@
                 implicit(vec3(p.x, p.y, p.z + EPSILON)) - implicit(vec3(p.x, p.y, p.z - EPSILON)));
 }
 
-void Surface::compute_mesh(Mesh& mesh, int n, const AABB& region) {
+AABB Surface::compute_tight_aabb(const AABB& region, int precision) {
+    const vec3 cell_size = (region.pmax - region.pmin) / static_cast<float>(precision - 1);
+
+    vec3 inside_min(INFINITY);
+    vec3 inside_max(-INFINITY);
+
+    for(int k = 0; k < precision; ++k) {
+        for(int j = 0; j < precision; ++j) {
+            for(int i = 0; i < precision; ++i) {
+                const vec3 p = region.pmin + vec3(i * cell_size.x, j * cell_size.y, k * cell_size.z);
+
+                if(root->potential(p) >= THRESHOLD) {
+                    inside_min = min(inside_min, p);
+                    inside_max = max(inside_max, p);
+                }
+            }
+        }
+    }
+
+    AABB tight;
+    tight.pmin = max(inside_min - cell_size, region.pmin);
+    tight.pmax = min(inside_max + cell_size, region.pmax);
+    return tight;
+}
+
+void Surface::compute_mesh(Mesh& mesh, int precision, const AABB& region) {
     if(root == nullptr) {
         throw std::runtime_error("Can't create the mesh for an empty implicit surface");
     }
 
     Timer timer;
 
-    std::cout << "Precision: " << n << '\n';
+    std::cout << "Precision: " << precision << '\n';
 
     std::vector<vec3> vertices;
     std::vector<int> triangles;
@@ -58,9 +83,9 @@ void Surface::compute_mesh(Mesh& mesh, int n, const AABB& region) {
     triangles.reserve(20000);
 
     int nv = 0;
-    const int nx = n;
-    const int ny = n;
-    const int nz = n;
+    const int nx = precision;
+    const int ny = precision;
+    const int nz = precision;
 
     // Clamped integer values
     const int nax = 0;
@@ -88,7 +113,7 @@ void Surface::compute_mesh(Mesh& mesh, int n, const AABB& region) {
     int* ez = new int[size];
 
     // Diagonal of a cell
-    vec3 d = (region.pmax - region.pmin) / static_cast<float>(n - 1);
+    vec3 d = (region.pmax - region.pmin) / static_cast<float>(precision - 1);
 
     double za = 0.0;
 

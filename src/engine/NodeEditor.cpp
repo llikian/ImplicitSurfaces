@@ -184,14 +184,16 @@ void NodeEditor::delete_selection() {
     ImNodes::ClearNodeSelection();
 }
 
-void NodeEditor::compute_mesh(Mesh& mesh, mat4& aabb_model, float fov, vec3& pos) {
+void NodeEditor::compute_mesh(Mesh& mesh, mat4& aabb_model, mat4& tight_aabb_model, float fov, vec3& pos) {
     std::size_t blobs_count = 0;
     AABB aabb = surface.root->get_aabb_and_blob_count(blobs_count);
+    AABB tight_aabb = surface.compute_tight_aabb(aabb, 32);
     std::cout << "\nThe scene contains " << blobs_count << " blobs.\n";
 
     mesh.clear();
     surface.compute_mesh(mesh, precision, aabb);
     aabb_model = aabb.get_global_model_matrix();
+    tight_aabb_model = tight_aabb.get_global_model_matrix();
 
     const vec3 center = (aabb.pmin + aabb.pmax) * 0.5f;
     const float half_w = (aabb.pmax.x - aabb.pmin.x) * 0.5f;

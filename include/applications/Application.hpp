@@ -36,10 +36,8 @@ public:
     void update_surface_mesh();
 
 private:
-    void draw_mesh(const Mesh& mesh, const mat4& model, const mat4& aabb_model);
-
     void draw();
-    void draw_imgui_main_window();
+    bool draw_imgui_main_window();
 
     void handle_dockspace() const;
 
@@ -54,9 +52,11 @@ private:
     Mesh wireframe_sphere;
 
     mat4 vp_matrix;
-    inline static mat4 IDENTITY { 1.0f };
 
     NodeEditor node_editor;
     Mesh surface_mesh;
+    bool show_surface_aabb;
     mat4 surface_aabb_model;
+    bool show_surface_tight_aabb;
+    mat4 surface_tight_aabb_model;
 };

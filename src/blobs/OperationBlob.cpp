@@ -11,8 +11,9 @@ std::unique_ptr<Blob> make_op_blob(BlobOpType op_type, float scale) {
         case BlobOpType::UNION:        return std::make_unique<UnionBlob>(scale);
         case BlobOpType::INTERSECTION: return std::make_unique<IntersectionBlob>(scale);
         case BlobOpType::DIFFERENCE:   return std::make_unique<DifferenceBlob>(scale);
-        default:                       return nullptr;
     }
+
+    return nullptr;
 }
 
 OperationBlob::OperationBlob(float scale) : Blob(scale), left(nullptr), right(nullptr) {
