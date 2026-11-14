@@ -36,7 +36,7 @@ struct NEAttribute {
                 const NENode* node,
                 IOType io_type,
                 const std::string& name,
-                int color = IM_COL_WHITE,
+                ImU32 color = IM_COL_WHITE,
                 ImNodesPinShape pin_shape = ImNodesPinShape_CircleFilled);
 
     void draw_pre();
@@ -46,7 +46,7 @@ struct NEAttribute {
     const NENode* node;
     IOType io_type;
     std::string name;
-    int color;
+    ImU32 color;
     ImNodesPinShape pin_shape;
 
     int link_id;

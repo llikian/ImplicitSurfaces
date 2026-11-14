@@ -32,5 +32,6 @@ struct Blob {
 
     float scale;
 
+    // protected:
     AABB aabb;
 };

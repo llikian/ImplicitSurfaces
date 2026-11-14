@@ -54,18 +54,23 @@ Application::Application()
     style.Flags |= ImNodesStyleFlags_GridLinesPrimary | ImNodesStyleFlags_GridSnapping;
     ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyCtrl;
 
-    NodeEditor& ne = node_editor;
+    try {
+        node_editor.load_from_file();
+    } catch(std::runtime_error& err) {
+        std::cout << err.what() << '\n';
 
-    const auto& sphere0 = ne.add_node<NENodeSphereBlob>(1.0f, vec3(-0.5f, 0.0f, 0.0f), 1.0f);
-    const auto& sphere1 = ne.add_node<NENodeSphereBlob>(1.0f, vec3(0.5f, 0.0f, 0.0f), 1.0f);
-    move_and_snap_node_to_grid(sphere1.id, ImVec2(0.0f, 250.0f));
-    const auto& blend_spheres = ne.add_node<NENodeOperationBlob>(1.0f, BlobOpType::BLEND);
-    move_and_snap_node_to_grid(blend_spheres.id, ImVec2(400.0f, 0.0f));
+        NodeEditor& ne = node_editor;
 
-    ne.add_link(sphere0.attr_blob.id, blend_spheres.attr_blob_left.id);
-    ne.add_link(sphere1.attr_blob.id, blend_spheres.attr_blob_right.id);
+        const auto& sphere0 = ne.add_node<NENodeSphereBlob>(1.0f, vec3(-0.5f, 0.0f, 0.0f), 1.0f);
+        const auto& sphere1 = ne.add_node<NENodeSphereBlob>(1.0f, vec3(0.5f, 0.0f, 0.0f), 1.0f);
+        move_and_snap_node_to_grid(sphere1.id, ImVec2(0.0f, 250.0f));
+        const auto& blend_spheres = ne.add_node<NENodeOperationBlob>(1.0f, BlobOpType::BLEND);
+        move_and_snap_node_to_grid(blend_spheres.id, ImVec2(400.0f, 0.0f));
 
-    node_editor.update_surface(&blend_spheres);
+        ne.add_link(sphere0.attr_blob.id, blend_spheres.attr_blob_left.id);
+        ne.add_link(sphere1.attr_blob.id, blend_spheres.attr_blob_right.id);
+        node_editor.update_surface(&blend_spheres);
+    }
     update_surface_mesh();
 
     /* ---- Other ---- */
@@ -75,6 +80,9 @@ Application::Application()
 }
 
 Application::~Application() {
+    node_editor.save_to_file();
+
+    ImNodes::DestroyContext();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -97,6 +105,7 @@ void Application::run() {
         bool is_main_window_drawn = draw_imgui_main_window();
         if(node_editor.draw()) {
             update_surface_mesh();
+            ImGui::FocusWindow(ImGui::FindWindowByName("Main"));
         }
 
         if(is_main_window_drawn) {

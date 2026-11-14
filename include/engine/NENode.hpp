@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include "blobs/CapsuleBlob.hpp"
 #include "blobs/OperationBlob.hpp"
@@ -20,6 +21,14 @@ inline void unformatted_text_aligned_right(const std::string& text) {
     ImGui::TextUnformatted(text.c_str());
 }
 
+enum class NENodeType : std::uint8_t {
+    sphere,
+    capsule,
+    operation,
+    transform,
+    bezier,
+};
+
 struct NENode {
     explicit NENode(int id);
     virtual ~NENode() = default;
@@ -32,6 +41,8 @@ struct NENode {
     virtual void get_attributes(std::vector<NEAttribute*>& attributes) = 0;
 
     virtual Blob* get_blob() const;
+
+    virtual constexpr NENodeType get_node_type() const = 0;
 
     int id;
     std::string title;
@@ -52,6 +63,8 @@ struct NENodeSphereBlob : NENodeBlob {
     void draw_attributes() override;
     void get_attributes(std::vector<NEAttribute*>& attributes) override;
 
+    constexpr NENodeType get_node_type() const override { return NENodeType::sphere; }
+
     NEAttribute attr_blob;
 };
 
@@ -61,6 +74,8 @@ struct NENodeCapsuleBlob : NENodeBlob {
     void draw_attributes() override;
     void get_attributes(std::vector<NEAttribute*>& attributes) override;
 
+    constexpr NENodeType get_node_type() const override { return NENodeType::capsule; }
+
     NEAttribute attr_blob;
 };
 
@@ -69,6 +84,8 @@ struct NENodeOperationBlob : NENodeBlob {
 
     void draw_attributes() override;
     void get_attributes(std::vector<NEAttribute*>& attributes) override;
+
+    constexpr NENodeType get_node_type() const override { return NENodeType::operation; }
 
     Blob* get_blob() const override;
 
@@ -87,6 +104,8 @@ struct NENodeTransformBlob : NENodeBlob {
 
     Blob* get_blob() const override;
 
+    constexpr NENodeType get_node_type() const override { return NENodeType::transform; }
+
     BlobTransformType transform_type;
 
     NEAttribute attr_blob_child;
@@ -98,6 +117,8 @@ struct NENodeBezierBlob : NENodeBlob {
 
     void draw_attributes() override;
     void get_attributes(std::vector<NEAttribute*>& attributes) override;
+
+    constexpr NENodeType get_node_type() const override { return NENodeType::bezier; }
 
     NEAttribute attr_blob;
 };

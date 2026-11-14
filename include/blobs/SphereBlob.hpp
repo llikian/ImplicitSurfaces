@@ -13,7 +13,6 @@ struct SphereBlob : Blob {
     SphereBlob(float scale, const vec3& center, float radius, const vec3& color = Random::get_vec3(0.0f, 1.0f));
 
     void precompute(std::size_t& count) override;
-
     [[nodiscard]] float potential(const vec3& point) const override;
     [[nodiscard]] Sample sample(const vec3& point) const override;
 

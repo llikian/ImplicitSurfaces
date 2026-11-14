@@ -5,12 +5,12 @@
 
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <utility>
 #include <vector>
 #include "NENode.hpp"
 #include "Surface.hpp"
-#include "Window.hpp"
 
 inline void move_and_snap_node_to_grid(int node_id, const ImVec2& position) {
     ImNodes::SetNodeEditorSpacePos(node_id, position);
@@ -49,9 +49,14 @@ public:
 
     void compute_mesh(Mesh& mesh, mat4& aabb_model, mat4& aabb_tight_model, float fov, vec3& pos);
 
+    void save_to_file(const std::filesystem::path& path = "data/scene.ne");
+    void load_from_file(const std::filesystem::path& path = "data/scene.ne");
+
 private:
     void draw_add_node_menu();
     void draw_node_right_click_menu();
+    void draw_load_file_modal();
+    void draw_save_file_modal();
 
     std::vector<std::unique_ptr<NENode>> nodes;
     std::unordered_map<int, NEAttribute*> attributes;
@@ -59,6 +64,8 @@ private:
     int next_node_index;
     int next_attribute_index;
     int next_link_id;
+
+    int last_root_node_id;
 
     ImU32 link_color;
 

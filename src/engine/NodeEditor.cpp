@@ -5,12 +5,17 @@
 
 #include "engine/NodeEditor.hpp"
 
+#include <fstream>
+#include "blobs/BezierBlob.hpp"
+#include "engine/Window.hpp"
+#include "imgui_stdlib.h"
 #include "imnodes.h"
 
 NodeEditor::NodeEditor()
     : next_node_index(0),
       next_attribute_index(0),
       next_link_id(0),
+      last_root_node_id(-1),
       link_color(IM_COL32_WHITE),
       add_node_start_attribute(-1),
       right_click_node_id(-1),
@@ -23,6 +28,17 @@ bool NodeEditor::draw() {
     ImNodes::PushColorStyle(ImNodesCol_Link, link_color);
     ImGui::Begin("Node Editor");
 
+    ImGui::SameLine();
+    if(ImGui::Button("Load")) {
+        ImGui::OpenPopup("##LoadFile");
+    }
+
+    ImGui::SameLine();
+    if(ImGui::Button("Save")) {
+        ImGui::OpenPopup("##SaveFile");
+    }
+
+    ImGui::SameLine();
     if(ImGui::Button("Add Node")) {
         add_node_start_attribute = -1;
         add_node_position = ImGui::GetMousePos();
@@ -30,7 +46,6 @@ bool NodeEditor::draw() {
     }
 
     ImGui::SameLine(0.0f, 10.0f);
-
     ImGui::PushItemWidth(100.0f);
     ImGui::InputInt("precision", &precision);
     ImGui::PopItemWidth();
@@ -91,6 +106,8 @@ bool NodeEditor::draw() {
 
     draw_add_node_menu();
     draw_node_right_click_menu();
+    draw_save_file_modal();
+    draw_load_file_modal();
 
     ImGui::End();
 
@@ -102,7 +119,7 @@ void NodeEditor::update_surface(const NENode* node) {
 
     if(blob != nullptr) {
         surface.root = blob;
-        ImGui::FocusWindow(ImGui::FindWindowByName("Main"));
+        last_root_node_id = node->id;
     }
 }
 
@@ -159,6 +176,10 @@ void NodeEditor::delete_node(int node_id) {
 
         nodes.erase(ite);
     }
+
+    if(last_root_node_id == node_id) {
+        last_root_node_id = -1;
+    }
 }
 
 void NodeEditor::delete_selection() {
@@ -208,6 +229,364 @@ void NodeEditor::compute_mesh(Mesh& mesh, mat4& aabb_model, mat4& tight_aabb_mod
     const float dist = std::max(dist_h, dist_w);
 
     pos = vec3(center.x, center.y, aabb.pmin.z - dist);
+}
+
+void NodeEditor::save_to_file(const std::filesystem::path& path) {
+    std::ofstream file(path);
+    if(!file.is_open()) {
+        throw std::runtime_error(std::string("Couldn't open file: ") + path.string());
+    }
+
+    file << std::setprecision(9);
+
+    static constexpr std::string TAB = "  ";
+
+    file << last_root_node_id << '\n';
+    file << nodes.size() << '\n';
+    for(const auto& node : nodes) {
+        NENodeType node_type = node->get_node_type();
+        file << node->id << '\n';
+        ImVec2 pos = ImNodes::GetNodeEditorSpacePos(node->id);
+        file << TAB << pos.x << ' ' << pos.y << '\n';
+        file << TAB << node->title << '\n';
+        file << TAB << static_cast<int>(node_type) << '\n';
+        file << TAB << node->title_bar_color << '\n';
+
+        switch(node_type) {
+            case NENodeType::sphere: {
+                const auto* tnode = static_cast<const NENodeSphereBlob*>(node.get());
+                const auto* blob = static_cast<const SphereBlob*>(tnode->blob.get());
+
+                file << TAB << TAB << tnode->attr_blob.id << '\n';
+
+                file << TAB << TAB << blob->scale << '\n';
+                file << TAB << TAB << blob->color.x << ' ' << blob->color.y << ' ' << blob->color.z << '\n';
+                file << TAB << TAB << blob->center.x << ' ' << blob->center.y << ' ' << blob->center.z << '\n';
+                file << TAB << TAB << blob->radius << '\n';
+
+                break;
+            }
+            case NENodeType::capsule: {
+                const auto* tnode = static_cast<const NENodeCapsuleBlob*>(node.get());
+                const auto* blob = static_cast<const CapsuleBlob*>(tnode->blob.get());
+
+                file << TAB << TAB << tnode->attr_blob.id << '\n';
+
+                file << TAB << TAB << blob->scale << '\n';
+                file << TAB << TAB << blob->color.x << ' ' << blob->color.y << ' ' << blob->color.z << '\n';
+                file << TAB << TAB << blob->A.x << ' ' << blob->A.y << ' ' << blob->A.z << '\n';
+                file << TAB << TAB << blob->B.x << ' ' << blob->B.y << ' ' << blob->B.z << '\n';
+                file << TAB << TAB << blob->radius << '\n';
+
+                break;
+            }
+            case NENodeType::operation: {
+                const auto* tnode = static_cast<const NENodeOperationBlob*>(node.get());
+                const auto* blob = static_cast<const OperationBlob*>(tnode->blob.get());
+
+                file << TAB << TAB << tnode->attr_blob.id << '\n';
+                file << TAB << TAB << tnode->attr_blob_left.id << '\n';
+                file << TAB << TAB << tnode->attr_blob_right.id << '\n';
+
+                file << TAB << TAB << static_cast<int>(tnode->op_type) << '\n';
+
+                file << TAB << TAB << blob->scale << '\n';
+
+                break;
+            }
+            case NENodeType::transform: {
+                const auto* tnode = static_cast<const NENodeTransformBlob*>(node.get());
+                const auto* blob = static_cast<const TransformBlob*>(tnode->blob.get());
+
+                file << TAB << TAB << tnode->attr_blob.id << '\n';
+                file << TAB << TAB << tnode->attr_blob_child.id << '\n';
+
+                file << TAB << TAB << static_cast<int>(tnode->transform_type) << '\n';
+
+                file << TAB << TAB << blob->scale << '\n';
+
+                switch(tnode->transform_type) {
+                    case BlobTransformType::translation: {
+                        vec3 t = static_cast<const TranslationBlob*>(blob)->translation;
+                        file << TAB << TAB << t.x << ' ' << t.y << ' ' << t.z << '\n';
+                        break;
+                    }
+                    case BlobTransformType::twist:
+                        file << TAB << TAB << static_cast<const TwistBlob*>(blob)->rate << '\n';
+                        break;
+                }
+
+                break;
+            }
+            case NENodeType::bezier: {
+                const auto* tnode = static_cast<const NENodeBezierBlob*>(node.get());
+                const auto* blob = static_cast<const BezierBlob*>(tnode->blob.get());
+
+                file << TAB << TAB << tnode->attr_blob.id << '\n';
+
+                file << TAB << TAB << blob->scale << '\n';
+                file << TAB << TAB << blob->spheres_count << '\n';
+                file << TAB << TAB << blob->p0.x << ' ' << blob->p0.y << ' ' << blob->p0.z << '\n';
+                file << TAB << TAB << blob->p1.x << ' ' << blob->p1.y << ' ' << blob->p1.z << '\n';
+                file << TAB << TAB << blob->p2.x << ' ' << blob->p2.y << ' ' << blob->p2.z << '\n';
+                file << TAB << TAB << blob->p3.x << ' ' << blob->p3.y << ' ' << blob->p3.z << '\n';
+                file << TAB << TAB << blob->radius_start << '\n';
+                file << TAB << TAB << blob->radius_end << '\n';
+                file << TAB << TAB << blob->color_start.x << ' ' << blob->color_start.y << ' ' << blob->color_start.z
+                     << '\n';
+                file << TAB << TAB << blob->color_end.x << ' ' << blob->color_end.y << ' ' << blob->color_end.z << '\n';
+
+                break;
+            }
+        }
+    }
+
+    file << attributes.size() << '\n';
+    for(const auto& [_, attr] : attributes) {
+        file << attr->id << '\n';
+        file << TAB << attr->node->id << '\n';
+        file << TAB << static_cast<int>(attr->io_type) << '\n';
+        file << TAB << attr->name << '\n';
+        file << TAB << attr->color << '\n';
+        file << TAB << attr->pin_shape << '\n';
+        file << TAB << attr->link_id << '\n';
+        if(attr->linked_attribute != nullptr) {
+            file << TAB << attr->linked_attribute->id << '\n';
+        } else {
+            file << TAB << -1 << '\n';
+        }
+    }
+
+    std::cout << "Saved node editor to file " << path << " successfully\n";
+}
+
+void NodeEditor::load_from_file(const std::filesystem::path& path) {
+    constexpr auto load_error = [](const std::filesystem::path& path, const char* what) -> void {
+        throw std::runtime_error(std::string("Invalid node editor file (") + what + "): " + path.string());
+    };
+
+    std::ifstream file(path);
+    if(!file.is_open()) {
+        throw std::runtime_error(std::string("Couldn't open file: ") + path.string());
+    }
+
+    static constexpr std::string TAB = "  ";
+
+    NodeEditor loaded;
+    std::unordered_map<int, NEAttribute*> old_attr_id_to_new_attr;
+    std::vector<std::pair<int, ImVec2>> positions;
+
+    if(!(file >> loaded.last_root_node_id)) {
+        load_error(path, "last root node id");
+    }
+    NENode* root = nullptr;
+
+    std::size_t node_count = 0;
+    if(!(file >> node_count)) {
+        load_error(path, "node count");
+    }
+
+    for(std::size_t i = 0; i < node_count; ++i) {
+        int saved_node_id;
+        ImVec2 pos;
+        std::string title;
+        int node_type_int;
+        ImU32 title_bar_color;
+
+        file >> saved_node_id >> pos.x >> pos.y;
+        file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::getline(file, title);
+        if(title.starts_with(TAB)) {
+            title.erase(0, TAB.size());
+        }
+        file >> node_type_int >> title_bar_color;
+        if(!file) {
+            load_error(path, "node header");
+        }
+
+        NENode* node = nullptr;
+
+        switch(static_cast<NENodeType>(node_type_int)) {
+            case NENodeType::sphere: {
+                int attr_blob_id;
+                float scale, radius;
+                vec3 color, center;
+                file >> attr_blob_id >> scale >> color >> center >> radius;
+                if(!file) {
+                    load_error(path, "sphere node");
+                }
+
+                loaded.add_node<NENodeSphereBlob>(scale, center, radius);
+                auto* tnode = static_cast<NENodeSphereBlob*>(loaded.nodes.back().get());
+                static_cast<SphereBlob*>(tnode->get_blob())->color = color;
+
+                old_attr_id_to_new_attr[attr_blob_id] = &tnode->attr_blob;
+                node = tnode;
+                break;
+            }
+            case NENodeType::capsule: {
+                int attr_blob_id;
+                float scale, radius;
+                vec3 color, A, B;
+                file >> attr_blob_id >> scale >> color >> A >> B >> radius;
+                if(!file) {
+                    load_error(path, "capsule node");
+                }
+
+                loaded.add_node<NENodeCapsuleBlob>(scale, A, B, radius);
+                auto* tnode = static_cast<NENodeCapsuleBlob*>(loaded.nodes.back().get());
+                static_cast<CapsuleBlob*>(tnode->get_blob())->color = color;
+
+                old_attr_id_to_new_attr[attr_blob_id] = &tnode->attr_blob;
+                node = tnode;
+                break;
+            }
+            case NENodeType::operation: {
+                int attr_blob_id, attr_left_id, attr_right_id, op_type_int;
+                float scale;
+                file >> attr_blob_id >> attr_left_id >> attr_right_id >> op_type_int >> scale;
+                if(!file) {
+                    load_error(path, "operation node");
+                }
+
+                loaded.add_node<NENodeOperationBlob>(scale, static_cast<BlobOpType>(op_type_int));
+                auto* tnode = static_cast<NENodeOperationBlob*>(loaded.nodes.back().get());
+
+                old_attr_id_to_new_attr[attr_blob_id] = &tnode->attr_blob;
+                old_attr_id_to_new_attr[attr_left_id] = &tnode->attr_blob_left;
+                old_attr_id_to_new_attr[attr_right_id] = &tnode->attr_blob_right;
+                node = tnode;
+                break;
+            }
+            case NENodeType::transform: {
+                int attr_blob_id, attr_child_id, transform_type_int;
+                float scale;
+                file >> attr_blob_id >> attr_child_id >> transform_type_int >> scale;
+                if(!file) {
+                    load_error(path, "transform node");
+                }
+
+                const auto transform_type = static_cast<BlobTransformType>(transform_type_int);
+                loaded.add_node<NENodeTransformBlob>(scale, transform_type);
+                auto* tnode = static_cast<NENodeTransformBlob*>(loaded.nodes.back().get());
+
+                switch(transform_type) {
+                    case BlobTransformType::translation: {
+                        vec3 translation;
+                        file >> translation;
+                        static_cast<TranslationBlob*>(tnode->blob.get())->translation = translation;
+                        break;
+                    }
+                    case BlobTransformType::twist: {
+                        float rate;
+                        file >> rate;
+                        static_cast<TwistBlob*>(tnode->blob.get())->rate = rate;
+                        break;
+                    }
+                }
+                if(!file) {
+                    load_error(path, "transform parameters");
+                }
+
+                old_attr_id_to_new_attr[attr_blob_id] = &tnode->attr_blob;
+                old_attr_id_to_new_attr[attr_child_id] = &tnode->attr_blob_child;
+                node = tnode;
+                break;
+            }
+            case NENodeType::bezier: {
+                int attr_blob_id, spheres_count;
+                float scale, radius_start, radius_end;
+                vec3 p0, p1, p2, p3;
+                vec3 color_start, color_end;
+                file >> attr_blob_id >> scale >> spheres_count >> p0 >> p1 >> p2 >> p3 >> radius_start >> radius_end >>
+                    color_start >> color_end;
+
+                if(!file) {
+                    load_error(path, "bezier node");
+                }
+
+                loaded.add_node<NENodeBezierBlob>(scale);
+                auto* tnode = static_cast<NENodeBezierBlob*>(loaded.nodes.back().get());
+                auto* blob = static_cast<BezierBlob*>(tnode->get_blob());
+                blob->spheres_count = spheres_count;
+                blob->p0 = p0;
+                blob->p1 = p1;
+                blob->p2 = p2;
+                blob->p3 = p3;
+                blob->radius_start = radius_start;
+                blob->radius_end = radius_end;
+                blob->color_start = color_start;
+                blob->color_end = color_end;
+
+                old_attr_id_to_new_attr[attr_blob_id] = &tnode->attr_blob;
+                node = tnode;
+                break;
+            }
+            default: load_error(path, "unknown node type");
+        }
+
+        node->title = title;
+        node->title_bar_color = title_bar_color;
+
+        if(loaded.last_root_node_id == saved_node_id) {
+            loaded.last_root_node_id = node->id;
+            root = node;
+        }
+
+        positions.emplace_back(node->id, pos);
+    }
+
+    std::size_t attribute_count = 0;
+    if(!(file >> attribute_count)) {
+        load_error(path, "attribute count");
+    }
+
+    std::vector<std::pair<int, int>> links;
+    for(std::size_t i = 0; i < attribute_count; ++i) {
+        int id, node_id, io_type, pin_shape, link_id, linked_id;
+        ImU32 color;
+        std::string name;
+        file >> id >> node_id >> io_type >> name >> color >> pin_shape >> link_id >> linked_id;
+        if(!file) {
+            load_error(path, "attribute");
+        }
+
+        if(io_type == static_cast<int>(IOType::IN) && linked_id >= 0) {
+            links.emplace_back(id, linked_id);
+        }
+    }
+
+    for(const auto& [input_id, output_id] : links) {
+        const auto input = old_attr_id_to_new_attr.find(input_id);
+        const auto output = old_attr_id_to_new_attr.find(output_id);
+        if(input == old_attr_id_to_new_attr.end() || output == old_attr_id_to_new_attr.end()) {
+            load_error(path, "link to an unknown attribute");
+        }
+        if(loaded.add_link(input->second->id, output->second->id) < 0) {
+            load_error(path, "invalid link");
+        }
+    }
+
+    nodes.swap(loaded.nodes);
+    attributes.swap(loaded.attributes);
+    std::swap(next_node_index, loaded.next_node_index);
+    std::swap(next_attribute_index, loaded.next_attribute_index);
+    std::swap(next_link_id, loaded.next_link_id);
+    std::swap(last_root_node_id, loaded.last_root_node_id);
+
+    surface.root = nullptr;
+    add_node_start_attribute = -1;
+    right_click_node_id = -1;
+
+    ImNodes::ClearNodeSelection();
+    ImNodes::ClearLinkSelection();
+    for(const auto& [node_id, pos] : positions) {
+        ImNodes::SetNodeEditorSpacePos(node_id, pos);
+    }
+
+    if(root != nullptr) {
+        update_surface(root);
+    }
 }
 
 void NodeEditor::draw_add_node_menu() {
@@ -290,6 +669,51 @@ void NodeEditor::draw_node_right_click_menu() {
         if(ImGui::MenuItem("Delete")) {
             delete_node(right_click_node_id);
             right_click_node_id = -1;
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void NodeEditor::draw_load_file_modal() {
+    static constexpr std::string path = "data/";
+
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if(ImGui::BeginPopupModal("##LoadFile", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        for(const auto& entry : std::filesystem::directory_iterator(path)) {
+            if(entry.is_regular_file() && entry.path().extension() == ".ne") {
+                if(ImGui::Button(entry.path().c_str())) {
+                    load_from_file(entry.path().string());
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        }
+
+        ImGui::Separator();
+        if(ImGui::Button("Cancel") || (!ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Escape))) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void NodeEditor::draw_save_file_modal() {
+    static std::string filename;
+
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if(ImGui::BeginPopupModal("##SaveFile", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::InputText("File Name", &filename);
+
+        if(ImGui::Button("Save")) {
+            std::string path = "data/" + filename + ".ne";
+            save_to_file(path);
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::Separator();
+        if(ImGui::Button("Cancel") || (!ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Escape))) {
+            ImGui::CloseCurrentPopup();
         }
 
         ImGui::EndPopup();

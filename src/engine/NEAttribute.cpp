@@ -11,7 +11,7 @@ NEAttribute::NEAttribute(int id,
                          const NENode* node,
                          IOType io_type,
                          const std::string& name,
-                         int color,
+                         ImU32 color,
                          ImNodesPinShape pin_shape)
     : id(id),
       node(node),
