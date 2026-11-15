@@ -31,9 +31,3 @@ mat4 AABB::get_global_model_matrix() const {
                 0.0f, 0.0f, 0.0f, 1.0f);
     // clang-format on
 }
-
-AABB& AABB::operator+(const vec3& translation) {
-    pmin += translation;
-    pmax += translation;
-    return *this;
-}

@@ -311,8 +311,17 @@ void NodeEditor::save_to_file(const std::filesystem::path& path) {
                         file << TAB << TAB << t.x << ' ' << t.y << ' ' << t.z << '\n';
                         break;
                     }
+                    case BlobTransformType::rotation: {
+                        const auto* tblob = static_cast<const RotationBlob*>(blob);
+                        file << TAB << TAB << tblob->axis.x << ' ' << tblob->axis.y << ' ' << tblob->axis.z << '\n';
+                        file << TAB << TAB << tblob->angle << '\n';
+                        break;
+                    }
                     case BlobTransformType::twist:
                         file << TAB << TAB << static_cast<const TwistBlob*>(blob)->rate << '\n';
+                        break;
+                    case BlobTransformType::taper:
+                        file << TAB << TAB << static_cast<const TaperBlob*>(blob)->rate << '\n';
                         break;
                 }
 
@@ -477,12 +486,26 @@ void NodeEditor::load_from_file(const std::filesystem::path& path) {
                         static_cast<TranslationBlob*>(tnode->blob.get())->translation = translation;
                         break;
                     }
+                    case BlobTransformType::rotation: {
+                        vec3 axis;
+                        float angle;
+                        file >> axis >> angle;
+                        auto* blob = static_cast<RotationBlob*>(tnode->blob.get());
+                        blob->axis = axis;
+                        blob->angle = angle;
+                        break;
+                    }
                     case BlobTransformType::twist: {
                         float rate;
                         file >> rate;
                         static_cast<TwistBlob*>(tnode->blob.get())->rate = rate;
                         break;
                     }
+                    case BlobTransformType::taper:
+                        float rate;
+                        file >> rate;
+                        static_cast<TaperBlob*>(tnode->blob.get())->rate = rate;
+                        break;
                 }
                 if(!file) {
                     load_error(path, "transform parameters");

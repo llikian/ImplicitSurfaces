@@ -207,8 +207,18 @@ void NENodeTransformBlob::draw_attributes() {
         blob = make_transform_blob(transform_type, b->scale);
     }
 
+    if(ImGui::RadioButton("Rotation", transform_type == BlobTransformType::rotation)) {
+        transform_type = BlobTransformType::rotation;
+        blob = make_transform_blob(transform_type, b->scale);
+    }
+
     if(ImGui::RadioButton("Twist", transform_type == BlobTransformType::twist)) {
         transform_type = BlobTransformType::twist;
+        blob = make_transform_blob(transform_type, b->scale);
+    }
+
+    if(ImGui::RadioButton("Taper", transform_type == BlobTransformType::taper)) {
+        transform_type = BlobTransformType::taper;
         blob = make_transform_blob(transform_type, b->scale);
     }
 
@@ -219,7 +229,14 @@ void NENodeTransformBlob::draw_attributes() {
         case BlobTransformType::translation:
             ImGui::InputFloat3("translation", &static_cast<TranslationBlob*>(b)->translation.x);
             break;
+        case BlobTransformType::rotation: {
+            auto* tblob = static_cast<RotationBlob*>(b);
+            ImGui::InputFloat3("axis", &tblob->axis.x);
+            ImGui::InputFloat("angle (deg)", &tblob->angle);
+            break;
+        }
         case BlobTransformType::twist: ImGui::InputFloat("rate", &static_cast<TwistBlob*>(b)->rate); break;
+        case BlobTransformType::taper: ImGui::InputFloat("rate", &static_cast<TaperBlob*>(b)->rate); break;
     }
 
     ImGui::NewLine();
