@@ -52,6 +52,9 @@ public:
     void save_to_file(const std::filesystem::path& path = "data/scene.ne");
     void load_from_file(const std::filesystem::path& path = "data/scene.ne");
 
+    // int add_recursive_spheres(int level);
+    int add_recursive_spheres(int level, const ImVec2& position, float offset);
+
 private:
     void draw_add_node_menu();
     void draw_node_right_click_menu();

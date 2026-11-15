@@ -214,7 +214,7 @@ void NodeEditor::compute_mesh(Mesh& mesh, mat4& aabb_model, mat4& tight_aabb_mod
     AABB tight_aabb = surface.compute_tight_aabb(aabb, 32);
 
     mesh.clear();
-    surface.compute_mesh(mesh, precision, aabb);
+    surface.compute_mesh(mesh, precision, tight_aabb);
     aabb_model = aabb.get_global_model_matrix();
     tight_aabb_model = tight_aabb.get_global_model_matrix();
 
@@ -610,6 +610,22 @@ void NodeEditor::load_from_file(const std::filesystem::path& path) {
     if(root != nullptr) {
         update_surface(root);
     }
+}
+
+int NodeEditor::add_recursive_spheres(int level, const ImVec2& position, float offset) {
+    if(level == 0) {
+        auto& leaf = add_node<NENodeSphereBlob>(1.0f, Random::get_vec3(-10.0f, 10.0f), Random::get_float(1.0f, 5.0f));
+        move_and_snap_node_to_grid(leaf.id, position);
+        return leaf.attr_blob.id;
+    }
+
+    auto& node = add_node<NENodeOperationBlob>(1.0f, BlobOpType::BLEND);
+    move_and_snap_node_to_grid(node.id, position);
+
+    float x = position.x - 450.0f;
+    add_link(add_recursive_spheres(level - 1, ImVec2(x, position.y - offset), offset * 0.5f), node.attr_blob_left.id);
+    add_link(add_recursive_spheres(level - 1, ImVec2(x, position.y + offset), offset * 0.5f), node.attr_blob_right.id);
+    return node.attr_blob.id;
 }
 
 void NodeEditor::draw_add_node_menu() {

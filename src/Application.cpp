@@ -114,6 +114,9 @@ void Application::run() {
         ImGui::Begin("Debug");
         ImGui::Checkbox("Show crude AABB", &show_surface_aabb);
         ImGui::Checkbox("Show tight AABB", &show_surface_tight_aabb);
+        if(ImGui::Button("Many Spheres")) {
+            node_editor.add_recursive_spheres(10, ImVec2(0, 0), 110 * (1 << (8 - 1)));
+        }
         ImGui::End();
 
         draw_imgui_main_window(); // last so it's focused on startup
