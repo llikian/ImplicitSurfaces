@@ -218,17 +218,17 @@ void NodeEditor::compute_mesh(Mesh& mesh, mat4& aabb_model, mat4& tight_aabb_mod
     aabb_model = aabb.get_global_model_matrix();
     tight_aabb_model = tight_aabb.get_global_model_matrix();
 
-    const vec3 center = (aabb.pmin + aabb.pmax) * 0.5f;
-    const float half_w = (aabb.pmax.x - aabb.pmin.x) * 0.5f;
-    const float half_h = (aabb.pmax.y - aabb.pmin.y) * 0.5f;
+    vec3 center = (tight_aabb.pmin + tight_aabb.pmax) * 0.5f;
+    float half_w = (tight_aabb.pmax.x - tight_aabb.pmin.x) * 0.5f;
+    float half_h = (tight_aabb.pmax.y - tight_aabb.pmin.y) * 0.5f;
 
-    const float tan_half_fov = std::tan(fov * 0.5f);
+    float tan_half_fov = std::tan(fov * 0.5f);
 
-    const float dist_h = half_h / tan_half_fov;
-    const float dist_w = half_w / (tan_half_fov * Window::get_aspect_ratio());
-    const float dist = std::max(dist_h, dist_w);
+    float dist_h = half_h / tan_half_fov;
+    float dist_w = half_w / (tan_half_fov * Window::get_aspect_ratio());
+    float dist = std::max(dist_h, dist_w);
 
-    pos = vec3(center.x, center.y, aabb.pmin.z - dist);
+    pos = vec3(center.x, center.y, tight_aabb.pmin.z - dist);
 }
 
 void NodeEditor::save_to_file(const std::filesystem::path& path) {

@@ -21,6 +21,10 @@ float attenuation_wyvill2(float distance_sqr) {
     return base * base;
 }
 
+float attenuation_polynomiale(float distance_sqr) {
+    return pow2(1.0f - distance_sqr) * (1.0f - 4.0f * distance_sqr / 9.0f);
+}
+
 Blob::Blob(float scale) : scale(scale) {
 }
 

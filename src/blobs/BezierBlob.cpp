@@ -13,7 +13,6 @@ void BezierBlob::precompute(std::size_t& count) {
 
     aabb.pmin = vec3(INFINITY);
     aabb.pmax = vec3(-INFINITY);
-    float length = 0.0f;
 
     for(int i = 0; i < spheres_count; ++i) {
         float t = static_cast<float>(i) / (spheres_count - 1);
@@ -24,15 +23,6 @@ void BezierBlob::precompute(std::size_t& count) {
 
         aabb.pmin = min(aabb.pmin, precomputed_values[i].center - radii[i]);
         aabb.pmax = max(aabb.pmax, precomputed_values[i].center + radii[i]);
-
-        if(i > 0) {
-            length += std::sqrt(length2(precomputed_values[i].center - precomputed_values[i - 1].center));
-        }
-    }
-
-    float spacing = length / (spheres_count - 1);
-    for(int i = 0; i < spheres_count; ++i) {
-        precomputed_values[i].weight = 15.0f * spacing / (16.0f * radii[i]);
     }
 }
 
@@ -41,7 +31,7 @@ void BezierBlob::precompute(std::size_t& count) {
     for(int i = 0; i < spheres_count; ++i) {
         float q = length2(point - precomputed_values[i].center) * precomputed_values[i].inv_radius_sqr;
         if(q < 1.0f) {
-            sum += precomputed_values[i].weight * attenuation(q);
+            sum += attenuation(q);
         }
     }
     return scale * sum;
@@ -54,7 +44,7 @@ void BezierBlob::precompute(std::size_t& count) {
     for(int i = 0; i < spheres_count; ++i) {
         float q = length2(point - precomputed_values[i].center) * precomputed_values[i].inv_radius_sqr;
         if(q < 1.0f) {
-            const float contribution = precomputed_values[i].weight * attenuation(q);
+            const float contribution = attenuation(q);
             sum += contribution;
             color_sum += contribution * precomputed_values[i].color;
         }

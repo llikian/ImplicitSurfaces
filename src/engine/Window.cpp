@@ -25,7 +25,9 @@ static void opengl_error_callback(unsigned int source,
         131185,
     };
 
-    if(ignore_list.contains(id)) { return; }
+    if(ignore_list.contains(id)) {
+        return;
+    }
 
     std::cerr << "OpenGL Message:"
               << "\n\tID: " << id << "\n\tSeverity: ";
@@ -69,14 +71,18 @@ Window::Window() : window(nullptr) {
     /* ---- GLFW ---- */
     glfwSetErrorCallback(glfw_error_callback);
 
-    if(!glfwInit()) { throw std::runtime_error("Failed to initialize GLFW."); }
+    if(!glfwInit()) {
+        throw std::runtime_error("Failed to initialize GLFW.");
+    }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(1920, 1080, "OpenGL-Engine", nullptr, nullptr);
-    if(window == nullptr) { throw std::runtime_error("Failed to create window."); }
+    if(window == nullptr) {
+        throw std::runtime_error("Failed to create window.");
+    }
 
     glfwMakeContextCurrent(window);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -97,7 +103,7 @@ Window::Window() : window(nullptr) {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glClearColor(0.1, 0.1f, 0.1f, 1.0f);
+    glClearColor(1.0, 1.0f, 1.0f, 1.0f);
     glClearDepth(1.0f);
 
     glEnable(GL_BLEND);

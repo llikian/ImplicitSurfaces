@@ -4,9 +4,9 @@
  **************************************************************************************************/
 
 #include <iostream>
-#include "applications/Application.hpp"
 #include "engine/EventHandler.hpp"
 #include "engine/Window.hpp"
+#include "Application.hpp"
 
 int main() {
     try {

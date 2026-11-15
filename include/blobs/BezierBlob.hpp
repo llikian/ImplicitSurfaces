@@ -28,7 +28,6 @@ private:
         vec3 center;
         float inv_radius_sqr;
         vec3 color;
-        float weight;
     };
 
     std::vector<PrecomputedValue> precomputed_values;

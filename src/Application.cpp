@@ -3,7 +3,7 @@
  * @brief Implementation of the Application class
  **************************************************************************************************/
 
-#include "applications/Application.hpp"
+#include "Application.hpp"
 
 #include "assets/Shader.hpp"
 #include "blobs/Blob.hpp"
@@ -35,6 +35,10 @@ Application::Application()
     });
     EventHandler::associate_action_to_key(GLFW_KEY_2, false, []() {
         ImGui::FocusWindow(ImGui::FindWindowByName("Node Editor"));
+        EventHandler::get().show_cursor();
+    });
+    EventHandler::associate_action_to_key(GLFW_KEY_3, false, []() {
+        ImGui::FocusWindow(ImGui::FindWindowByName("Debug"));
         EventHandler::get().show_cursor();
     });
 
@@ -102,18 +106,17 @@ void Application::run() {
 
         vp_matrix = camera.get_view_projection_matrix();
 
-        bool is_main_window_drawn = draw_imgui_main_window();
         if(node_editor.draw()) {
             update_surface_mesh();
             ImGui::FocusWindow(ImGui::FindWindowByName("Main"));
         }
 
-        if(is_main_window_drawn) {
-            ImGui::Begin("Debug");
-            ImGui::Checkbox("Show crude AABB", &show_surface_aabb);
-            ImGui::Checkbox("Show tight AABB", &show_surface_tight_aabb);
-            ImGui::End();
-        }
+        ImGui::Begin("Debug");
+        ImGui::Checkbox("Show crude AABB", &show_surface_aabb);
+        ImGui::Checkbox("Show tight AABB", &show_surface_tight_aabb);
+        ImGui::End();
+
+        draw_imgui_main_window(); // last so it's focused on startup
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -143,12 +146,12 @@ void Application::draw() {
     glLineWidth(3.0f);
     if(show_surface_aabb) {
         line_shader.set_uniform("u_mvp", vp_matrix * surface_aabb_model);
-        line_shader.set_uniform("u_color", vec3(1.0f, 1.0f, 0.0f));
+        line_shader.set_uniform("u_color", vec3(1.0f, 0.0f, 0.0f));
         wireframe_cube.draw();
     }
     if(show_surface_tight_aabb) {
         line_shader.set_uniform("u_mvp", vp_matrix * surface_tight_aabb_model);
-        line_shader.set_uniform("u_color", vec3(1.0f, 1.0f, 1.0f));
+        line_shader.set_uniform("u_color", vec3(0.0f, 0.0f, 0.0f));
         wireframe_cube.draw();
     }
     glLineWidth(1.0f);
@@ -157,9 +160,9 @@ void Application::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 };
 
-bool Application::draw_imgui_main_window() {
+void Application::draw_imgui_main_window() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    bool is_window_drawn = ImGui::Begin("Main", nullptr, ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin("Main", nullptr, ImGuiWindowFlags_NoTitleBar);
     ImGui::PopStyleVar(1);
 
     ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -178,8 +181,6 @@ bool Application::draw_imgui_main_window() {
     ImGui::Image(framebuffer.get_texture_id(), avail, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
     ImGui::End();
-
-    return is_window_drawn;
 }
 
 void Application::handle_dockspace() const {
@@ -187,14 +188,11 @@ void Application::handle_dockspace() const {
 
     static bool init_dock = !std::filesystem::exists("data/imgui.ini");
     if(init_dock) {
-        ImGuiID id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
-
         ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
 
         ImGui::DockBuilderDockWindow("Main", dockspace_id);
         ImGui::DockBuilderDockWindow("Node Editor", dockspace_id);
-
-        ImGui::DockBuilderDockWindow("Debug", id_left);
+        ImGui::DockBuilderDockWindow("Debug", dockspace_id);
 
         ImGui::DockBuilderFinish(dockspace_id);
 

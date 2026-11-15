@@ -37,7 +37,7 @@ public:
 
 private:
     void draw();
-    bool draw_imgui_main_window();
+    void draw_imgui_main_window();
 
     void handle_dockspace() const;
 

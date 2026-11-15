@@ -13,8 +13,10 @@
 
 float attenuation_wyvill(float distance_sqr, int n);
 float attenuation_wyvill2(float distance_sqr);
+float attenuation_polynomiale(float distance_sqr);
 
 #define attenuation(D) attenuation_wyvill2(D)
+// #define attenuation(D) attenuation_polynomiale(D)
 
 struct Sample {
     float potential;
@@ -32,6 +34,5 @@ struct Blob {
 
     float scale;
 
-    // protected:
     AABB aabb;
 };

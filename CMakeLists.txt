@@ -114,7 +114,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 # Executable
-add_executable(${PROJECT_NAME} src/main.cpp ${SOURCES} src/applications/Application.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp ${SOURCES} src/Application.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDES})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARIES})
