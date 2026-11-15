@@ -35,12 +35,12 @@ struct TranslationBlob : TransformBlob {
     vec3 translation;
 };
 
-// Global & Local Deformations of Solid Primitives - 1984 Alan H. Barr
+// Paper: Global & Local Deformations of Solid Primitives - 1984 Alan H. Barr
 struct TwistBlob : TransformBlob {
     using TransformBlob::TransformBlob;
 
     void precompute(std::size_t& count) override;
     vec3 transform(const vec3& point) const override;
 
-    float rate;
+    float rate { 0.0f };
 };

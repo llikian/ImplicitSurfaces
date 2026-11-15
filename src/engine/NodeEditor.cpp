@@ -677,13 +677,14 @@ void NodeEditor::draw_node_right_click_menu() {
 
 void NodeEditor::draw_load_file_modal() {
     static constexpr std::string path = "data/";
+    static constexpr std::string extension = ".ne";
 
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if(ImGui::BeginPopupModal("##LoadFile", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         for(const auto& entry : std::filesystem::directory_iterator(path)) {
-            if(entry.is_regular_file() && entry.path().extension() == ".ne") {
-                if(ImGui::Button(entry.path().c_str())) {
-                    load_from_file(entry.path().string());
+            if(entry.is_regular_file() && entry.path().extension() == extension) {
+                if(ImGui::Selectable(entry.path().filename().c_str())) {
+                    load_from_file(entry.path());
                     ImGui::CloseCurrentPopup();
                 }
             }
@@ -699,19 +700,20 @@ void NodeEditor::draw_load_file_modal() {
 }
 
 void NodeEditor::draw_save_file_modal() {
+    static constexpr std::string path = "data/";
+    static constexpr std::string extension = ".ne";
     static std::string filename;
 
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if(ImGui::BeginPopupModal("##SaveFile", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::InputText("File Name", &filename);
 
-        if(ImGui::Button("Save")) {
-            std::string path = "data/" + filename + ".ne";
-            save_to_file(path);
+        if(ImGui::Button("Save") && !filename.empty()) {
+            save_to_file(path + filename + extension);
             ImGui::CloseCurrentPopup();
         }
 
-        ImGui::Separator();
+        ImGui::SameLine();
         if(ImGui::Button("Cancel") || (!ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Escape))) {
             ImGui::CloseCurrentPopup();
         }

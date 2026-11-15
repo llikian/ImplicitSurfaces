@@ -36,7 +36,6 @@ struct NENode {
     // bool value is for handling a button press
     bool draw();
 
-    // bool value is for handling a button press
     virtual void draw_attributes() = 0;
     virtual void get_attributes(std::vector<NEAttribute*>& attributes) = 0;
 

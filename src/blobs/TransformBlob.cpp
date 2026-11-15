@@ -8,7 +8,7 @@
 std::unique_ptr<Blob> make_transform_blob(BlobTransformType transform_type, float scale) {
     switch(transform_type) {
         case BlobTransformType::translation: return std::make_unique<TranslationBlob>(scale);
-        case BlobTransformType::twist:       return std::make_unique<TwistBlob>(scale); break;
+        case BlobTransformType::twist:       return std::make_unique<TwistBlob>(scale);
     }
 
     return nullptr;
