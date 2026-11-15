@@ -604,7 +604,7 @@ void NodeEditor::load_from_file(const std::filesystem::path& path) {
     ImNodes::ClearNodeSelection();
     ImNodes::ClearLinkSelection();
     for(const auto& [node_id, pos] : positions) {
-        ImNodes::SetNodeEditorSpacePos(node_id, pos);
+        move_and_snap_node_to_grid(node_id, pos);
     }
 
     if(root != nullptr) {
